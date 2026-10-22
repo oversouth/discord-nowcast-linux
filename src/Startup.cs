@@ -57,14 +57,44 @@ namespace Nowcast
             }
         }
 
-        // A desktop shortcut, made once: a marker file remembers it, so a
-        // shortcut you deleted stays deleted. One that exists follows the exe
-        // when it moves.
-        public static void DesktopShortcut()
+        static readonly string installMarker = Path.Combine(Log.Folder, "installed-at");
+
+        // A new install is this exe started from a place it has not run from
+        // before: just downloaded, or moved. The marker file holds the last
+        // place. Settings survive deleting the exe, so they cannot tell.
+        public static bool IsNewInstall
         {
-            var marker = Path.Combine(Log.Folder, "desktop-shortcut");
+            get
+            {
+                var last = File.Exists(installMarker) ? File.ReadAllText(installMarker).Trim() : null;
+                return !string.Equals(last, Application.ExecutablePath, StringComparison.OrdinalIgnoreCase);
+            }
+        }
+
+        // A new install starts with Windows and gets a desktop shortcut. After
+        // that your choices hold: autostart turned off or a shortcut deleted
+        // stay that way.
+        public static void Install()
+        {
+            if (IsNewInstall)
+            {
+                Enable();
+                DesktopShortcut(true);
+                Directory.CreateDirectory(Log.Folder);
+                File.WriteAllText(installMarker, Application.ExecutablePath);
+            }
+            else
+            {
+                Refresh();
+                DesktopShortcut(false);
+            }
+        }
+
+        // create: make it; otherwise only point an existing one at this exe.
+        static void DesktopShortcut(bool create)
+        {
             var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "discord-nowcast.lnk");
-            if (File.Exists(marker) && !File.Exists(path)) return;
+            if (!create && !File.Exists(path)) return;
             try
             {
                 var shellType = Type.GetTypeFromProgID("WScript.Shell");
@@ -76,7 +106,6 @@ namespace Nowcast
                 linkType.InvokeMember("IconLocation", BindingFlags.SetProperty, null, link, new object[] { Application.ExecutablePath + ",0" });
                 linkType.InvokeMember("Description", BindingFlags.SetProperty, null, link, new object[] { "discord-nowcast" });
                 linkType.InvokeMember("Save", BindingFlags.InvokeMethod, null, link, null);
-                File.WriteAllText(marker, "");
             }
             catch (Exception e)
             {

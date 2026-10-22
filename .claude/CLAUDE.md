@@ -10,8 +10,9 @@
 - `Sources.cs`: имя источника (`names` из настроек → имя из меню «Пуск» через Shell.Application для `_crx_` и `!` → правила) и ссылка поиска для кнопки. Логотип источника в углу обложки (small_image) пробовали в 1.1.0 и убрали по решению автора: Discord показывал вместо него «?».
 - `Covers.cs`: обложка всегда из медиасессии, выкладывается на litterbox.catbox.moe (72h). Нет обложки → нет `assets`, Discord показывает иконку приложения (small_image без large_image не показывается).
 - `Activity.cs`: строки, `status_display_type`, обложка, полоска, кнопка «Слушать на …» (поиск в том же сервисе, иначе YouTube).
-- `Discord.cs`: `\\.\pipe\discord-ipc-N`, кадр op/длина/JSON, ping→pong.
-- `TrayApp.cs`: NotifyIcon и меню; `Startup.cs`: HKCU Run, ярлык на рабочем столе один раз (маркер `desktop-shortcut` в папке настроек), удаление 1.0.x (ярлык в Startup + процесс powershell с `-File …nowcast.ps1`); `Updater.cs`: GitHub releases/latest, замена exe через переименование в `.old`.
+- `Discord.cs`: `\\.\pipe\discord-ipc-N`, кадр op/длина/JSON, ping→pong. `IsAlive` через PeekNamedPipe: иначе перезапуск Discord не виден, пока не сменится трек. Discord ищется каждые 3 с только среди существующих каналов; через 10 с после подключения статус уходит повторно.
+- Планы (ждут автора): своё приложение Discord на каждый сервис («Слушает SoundCloud», «Смотрит YouTube» типом 3) — автор создаст 8 приложений и пришлёт ID; распознавание сайта по заголовку окна браузера (PlaybackType у Chrome всегда Music, по нему видео не отличить).
+- `TrayApp.cs`: NotifyIcon и меню (в т.ч. «Источники в статусе»); `SettingsForm.cs`: окно настроек, каждое изменение сразу пишется в config.json (Settings.Save) и движок перечитывает его; `Startup.cs`: новая установка = exe запущен из нового места (маркер `installed-at` с путём) → HKCU Run и ярлык на рабочем столе; потом выбор пользователя не трогаем, удаление 1.0.x (ярлык в Startup + процесс powershell с `-File …nowcast.ps1`); `Updater.cs`: GitHub releases/latest, замена exe через переименование в `.old`.
 - `Text.cs`: строки по-русски на русской Windows, иначе по-английски. Лог (`%APPDATA%\discord-nowcast\log.txt`) по-английски.
 
 ## Важно

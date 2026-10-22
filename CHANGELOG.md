@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.2.0
+
+- **Settings window** from the tray menu: what the member list shows, cover art, the "Listen on …" button, keeping the status on pause, sources, starting with Windows, update checks. Changes apply at once.
+- **Choose the sources.** *Sources in the status* in the tray menu and the settings window has a checkbox per app playing now: clear one to keep, say, YouTube in the browser out of the status.
+- **Discord started after the music** now picks up the status within seconds. Before, a Discord that was closed and opened again went unnoticed until the track changed. The status is also sent once more ten seconds after connecting, since a Discord still starting up can drop the first one.
+- **Every new install** — the exe downloaded again or moved — starts with Windows and gets a desktop shortcut, even when settings from an earlier install are still there. Autostart turned off or a shortcut deleted stay that way afterwards.
+- A click on a line in *What Windows sees* copies the app's ID, for reporting a player that is not recognized.
+
+Окно настроек, выбор источников галочками, статус подхватывается после запуска Discord, автозагрузка и ярлык при каждой новой установке.
+
 ## 1.1.1
 
 - **Desktop shortcut.** The first start puts a discord-nowcast shortcut on the desktop, next to adding itself to startup. Delete it and it stays deleted; move the exe and the shortcut follows.

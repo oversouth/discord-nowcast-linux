@@ -24,9 +24,9 @@ namespace Nowcast
         bool? sentPlaying;
         DateTime sentAt = DateTime.MinValue;
         DateTime nextConnect = DateTime.MinValue;
+        DateTime? resendAt;
         string shownKey;
 
-        public bool IsFirstRun { get; private set; }
         public DateTime HiddenUntil { get; private set; }
         // For the tray: one line about the status and the sessions Windows reports.
         public string Status { get; private set; }
@@ -35,9 +35,7 @@ namespace Nowcast
 
         public Engine()
         {
-            bool isNew;
-            settings = Settings.Load(out isNew);
-            IsFirstRun = isNew;
+            settings = Settings.Load();
             Status = Text.Starting;
             Sessions = new List<Track>();
 
@@ -122,16 +120,30 @@ namespace Nowcast
             if (reload)
             {
                 reload = false;
-                bool isNew;
-                settings = Settings.Load(out isNew);
+                settings = Settings.Load();
                 sentKey = null;
                 Log.Write("Settings reloaded");
             }
 
+            if (discord.IsConnected && !discord.IsAlive)
+            {
+                Log.Write("Discord closed the connection");
+                discord.Dispose();
+                nextConnect = DateTime.Now;
+            }
             if (!discord.IsConnected && DateTime.Now >= nextConnect)
             {
-                if (discord.Connect(settings.ClientId)) sentKey = null;
-                else nextConnect = DateTime.Now.AddSeconds(15);
+                if (discord.Connect(settings.ClientId))
+                {
+                    sentKey = null;
+                    // A Discord that is still starting up can drop the first
+                    // status, so it goes once more a little later.
+                    resendAt = DateTime.Now.AddSeconds(10);
+                }
+                else
+                {
+                    nextConnect = DateTime.Now.AddSeconds(3);
+                }
             }
 
             var sessions = Media.Read(settings);
@@ -149,9 +161,11 @@ namespace Nowcast
             bool? playing = track == null ? (bool?)null : track.IsPlaying;
             // A seek: the start of the track moved by more than 3 seconds.
             var jumped = start.HasValue && sentStart.HasValue && Math.Abs(start.Value - sentStart.Value) > 3000;
-            var changed = key != sentKey || playing != sentPlaying || jumped;
+            var isResend = resendAt.HasValue && DateTime.Now >= resendAt.Value;
+            var changed = key != sentKey || playing != sentPlaying || jumped || isResend;
             // Discord takes at most 5 updates per 20 seconds.
             if (!changed || (DateTime.Now - sentAt).TotalSeconds < 4) return;
+            if (isResend) resendAt = null;
 
             try
             {
@@ -198,9 +212,7 @@ namespace Nowcast
 
         bool IsHidden(Track track)
         {
-            return settings.Hide.Any(word =>
-                track.App.IndexOf(word, StringComparison.OrdinalIgnoreCase) >= 0 ||
-                track.Source.Name.IndexOf(word, StringComparison.OrdinalIgnoreCase) >= 0);
+            return settings.Hides(track.App, track.Source.Name);
         }
 
         // When the track started, Unix ms; null when the app gives no length.

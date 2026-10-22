@@ -28,12 +28,29 @@ namespace Nowcast
 
         public static readonly string HideHour = T("Скрыть статус на час", "Hide status for an hour");
         public static readonly string ShowAgain = T("Снова показывать статус", "Show status again");
+        public static readonly string Sources = T("Источники в статусе", "Sources in the status");
         public static readonly string WhatWindowsSees = T("Что видит Windows", "What Windows sees");
         public static readonly string NoSessions = T("Ни одно приложение не сообщает о треке", "No app reports a track");
         public static readonly string Playing = T("играет", "playing");
         public static readonly string Paused = T("пауза", "paused");
         public static readonly string Autostart = T("Запускать вместе с Windows", "Start with Windows");
-        public static readonly string Settings = T("Настройки (config.json)", "Settings (config.json)");
+        public static readonly string Settings = T("Настройки…", "Settings…");
+
+        // The settings window.
+        public static readonly string StatusHeading = T("Статус в Discord", "Discord status");
+        public static readonly string InListLabel = T("Что видно в списке участников после «Слушает»:", "What the member list shows after \"Listening to\":");
+        public static readonly string InListSource = T("Откуда играет: SoundCloud, Telegram…", "Where it plays: SoundCloud, Telegram…");
+        public static readonly string InListArtist = T("Исполнитель", "The artist");
+        public static readonly string InListTitle = T("Название трека", "The track title");
+        public static readonly string InListApp = T("Название приложения Discord", "The Discord application's name");
+        public static readonly string CoversOption = T("Обложка трека", "Cover art");
+        public static readonly string ButtonsOption = T("Кнопка «Слушать на …»", "\"Listen on …\" button");
+        public static readonly string ShowPausedOption = T("Не убирать статус на паузе", "Keep the status on pause");
+        public static readonly string SourcesNote = T("Приложения, которые сейчас играют. Снимите галочку, чтобы не показывать его в статусе.", "Apps playing now. Clear a box to keep that app out of the status.");
+        public static readonly string ProgramHeading = T("Программа", "The program");
+        public static readonly string CheckUpdatesOption = T("Проверять обновления", "Check for updates");
+        public static readonly string Advanced = T("Дополнительно (config.json)", "Advanced (config.json)");
+        public static readonly string Close = T("Закрыть", "Close");
         public static readonly string OpenLog = T("Открыть лог", "Open log");
         public static readonly string CheckUpdates = T("Проверить обновления", "Check for updates");
         public static readonly string UpdateTo = T("Обновить до {0}", "Update to {0}");

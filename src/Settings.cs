@@ -13,20 +13,6 @@ namespace Nowcast
     {
         public static readonly string FilePath = Path.Combine(Log.Folder, "config.json");
 
-        const string DefaultText =
-@"{
-  ""clientId"": ""1562901782579912804"",
-  ""inList"": ""source"",
-  ""showPaused"": false,
-  ""covers"": true,
-  ""buttons"": true,
-  ""checkUpdates"": true,
-  ""image"": """",
-  ""hide"": [],
-  ""names"": {}
-}
-";
-
         public string ClientId = "1562901782579912804";
         // What the member list shows after "Listening to": source, artist, title, app.
         public string InList = "source";
@@ -38,18 +24,15 @@ namespace Nowcast
         public List<string> Hide = new List<string>();
         public Dictionary<string, string> Names = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
-        // isNew: the file did not exist and was written now, that is, a first run.
-        public static Settings Load(out bool isNew)
+        public static Settings Load()
         {
-            isNew = false;
             var settings = new Settings();
             try
             {
                 Directory.CreateDirectory(Log.Folder);
                 if (!File.Exists(FilePath))
                 {
-                    File.WriteAllText(FilePath, DefaultText, new UTF8Encoding(false));
-                    isNew = true;
+                    settings.Save();
                 }
                 var values = new JavaScriptSerializer().Deserialize<Dictionary<string, object>>(File.ReadAllText(FilePath, Encoding.UTF8));
                 if (values != null) settings.Apply(values);
@@ -59,6 +42,54 @@ namespace Nowcast
                 Log.Write("config.json could not be read, using the defaults: " + e.Message);
             }
             return settings;
+        }
+
+        // Writes every setting, one per line, so the file stays easy to edit by hand.
+        public void Save()
+        {
+            var json = new JavaScriptSerializer();
+            var names = new List<string>();
+            foreach (var pair in Names) names.Add(json.Serialize(pair.Key) + ": " + json.Serialize(pair.Value));
+            var lines = new[]
+            {
+                "  \"clientId\": " + json.Serialize(ClientId),
+                "  \"inList\": " + json.Serialize(InList),
+                "  \"showPaused\": " + json.Serialize(ShowPaused),
+                "  \"covers\": " + json.Serialize(Covers),
+                "  \"buttons\": " + json.Serialize(Buttons),
+                "  \"checkUpdates\": " + json.Serialize(CheckUpdates),
+                "  \"image\": " + json.Serialize(Image),
+                "  \"hide\": " + json.Serialize(Hide),
+                "  \"names\": {" + string.Join(", ", names) + "}",
+            };
+            Directory.CreateDirectory(Log.Folder);
+            File.WriteAllText(FilePath, "{\r\n" + string.Join(",\r\n", lines) + "\r\n}\r\n", new UTF8Encoding(false));
+        }
+
+        // Whether a word in "hide" matches the app: by its ID or by the name shown.
+        public bool Hides(string app, string source)
+        {
+            foreach (var word in Hide)
+            {
+                if (app.IndexOf(word, StringComparison.OrdinalIgnoreCase) >= 0) return true;
+                if (source.IndexOf(word, StringComparison.OrdinalIgnoreCase) >= 0) return true;
+            }
+            return false;
+        }
+
+        // Shows or hides a source, as the tray's Sources menu does.
+        public void SetHidden(string app, string source, bool isHidden)
+        {
+            if (isHidden)
+            {
+                if (!Hides(app, source)) Hide.Add(source);
+            }
+            else
+            {
+                Hide.RemoveAll(word =>
+                    app.IndexOf(word, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    source.IndexOf(word, StringComparison.OrdinalIgnoreCase) >= 0);
+            }
         }
 
         void Apply(Dictionary<string, object> values)

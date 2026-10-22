@@ -34,7 +34,7 @@ When the music is paused or stops, the status clears itself.
 ## Install
 
 1. **[Download `discord-nowcast.exe`](https://github.com/playsin333/discord-nowcast/releases/latest/download/discord-nowcast.exe)** and put it in a folder you will keep, for example `Documents\discord-nowcast`.
-2. **Run it.** A raven appears by the clock, a shortcut appears on the desktop, and from now on it starts with Windows.
+2. **Run it.** A raven appears by the clock, a shortcut appears on the desktop, and from now on it starts with Windows. Downloaded it again, or moved it? The same happens for the new copy.
 
 That's all: one small file, nothing else to install. It needs Windows 10 or 11 and the Discord desktop app (not the website), with **Settings → Activity Privacy → Share your detected activities with others** turned on.
 
@@ -47,16 +47,17 @@ The raven by the clock, at the bottom right of the screen, is how you control it
 | Item | What it does |
 | --- | --- |
 | Hide status for an hour | clears the status for an hour; click again to bring it back |
-| What Windows sees | every app reporting a track right now, playing or paused |
+| Sources in the status | a checkbox per app playing now; clear one to keep, say, YouTube in the browser out of the status |
+| What Windows sees | every app reporting a track right now, playing or paused; a click copies its app ID |
 | Start with Windows | on by default |
-| Settings | opens `config.json`; changes apply as soon as you save |
+| Settings… | the settings window: what the member list shows, cover, button, pause, sources, autostart, updates. Changes apply at once |
 | Open log | what was sent to Discord and any errors |
 | Check for updates | downloads the new version and restarts; it also checks by itself every six hours |
 | Exit | stops it and clears the status |
 
 ## Settings
 
-`config.json` lives in `%APPDATA%\discord-nowcast` and opens from the tray menu.
+Most of these are in the settings window. All of them live in `config.json` in `%APPDATA%\discord-nowcast`, which opens from the window under *Advanced*.
 
 | Setting | What it means |
 | --- | --- |

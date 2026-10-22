@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Reflection;
@@ -19,10 +20,12 @@ namespace Nowcast
 
         readonly ToolStripMenuItem statusItem = new ToolStripMenuItem { Enabled = false };
         readonly ToolStripMenuItem hideItem = new ToolStripMenuItem(Text.HideHour);
+        readonly ToolStripMenuItem sourcesItem = new ToolStripMenuItem(Text.Sources);
         readonly ToolStripMenuItem sessionsItem = new ToolStripMenuItem(Text.WhatWindowsSees);
         readonly ToolStripMenuItem autostartItem = new ToolStripMenuItem(Text.Autostart) { CheckOnClick = true };
         readonly ToolStripMenuItem updateItem = new ToolStripMenuItem(Text.CheckUpdates);
         Release release;
+        SettingsForm settingsForm;
 
         public TrayApp(bool isUpdate)
         {
@@ -44,9 +47,10 @@ namespace Nowcast
             menu.Items.Add(statusItem);
             menu.Items.Add(hideItem);
             menu.Items.Add(new ToolStripSeparator());
+            menu.Items.Add(sourcesItem);
             menu.Items.Add(sessionsItem);
             menu.Items.Add(autostartItem);
-            menu.Items.Add(Text.Settings, null, delegate { Open("notepad.exe", Settings.FilePath); });
+            menu.Items.Add(Text.Settings, null, delegate { ShowSettings(); });
             menu.Items.Add(Text.OpenLog, null, delegate { Open("notepad.exe", Log.FilePath); });
             menu.Items.Add(updateItem);
             menu.Items.Add(new ToolStripSeparator());
@@ -76,16 +80,8 @@ namespace Nowcast
                 if (ui.IsHandleCreated) ui.BeginInvoke(new Action(RefreshStatus));
             };
 
-            if (engine.IsFirstRun)
-            {
-                Startup.Enable();
-                icon.ShowBalloonTip(8000, "discord-nowcast", Text.Running, ToolTipIcon.Info);
-            }
-            else
-            {
-                Startup.Refresh();
-            }
-            Startup.DesktopShortcut();
+            if (Startup.IsNewInstall) icon.ShowBalloonTip(8000, "discord-nowcast", Text.Running, ToolTipIcon.Info);
+            Startup.Install();
             if (isUpdate) icon.ShowBalloonTip(5000, "discord-nowcast", string.Format(Text.Updated, Program.Version), ToolTipIcon.Info);
 
             engine.Start();
@@ -117,6 +113,8 @@ namespace Nowcast
             autostartItem.Checked = Startup.IsEnabled;
             if (release != null) updateItem.Text = string.Format(Text.UpdateTo, release.Tag);
 
+            RefreshSources();
+
             sessionsItem.DropDownItems.Clear();
             foreach (var track in engine.Sessions)
             {
@@ -129,6 +127,48 @@ namespace Nowcast
             {
                 sessionsItem.DropDownItems.Add(new ToolStripMenuItem(Text.NoSessions) { Enabled = false });
             }
+        }
+
+        // One window at a time: a second click brings the open one forward.
+        void ShowSettings()
+        {
+            if (settingsForm == null || settingsForm.IsDisposed) settingsForm = new SettingsForm(engine);
+            settingsForm.ShowAgain();
+        }
+
+        // A checkbox per app playing now, plus the hidden ones, so they can come
+        // back: a cleared box keeps that app out of the status (the "hide" setting).
+        void RefreshSources()
+        {
+            sourcesItem.DropDownItems.Clear();
+            var settings = engine.Settings;
+            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var track in engine.Sessions)
+            {
+                if (!seen.Add(track.Source.Name)) continue;
+                AddSource(track.Source.Name, track.App, !settings.Hides(track.App, track.Source.Name));
+            }
+            foreach (var word in settings.Hide)
+            {
+                if (seen.Add(word)) AddSource(word, word, false);
+            }
+            if (sourcesItem.DropDownItems.Count == 0)
+            {
+                sourcesItem.DropDownItems.Add(new ToolStripMenuItem(Text.NoSessions) { Enabled = false });
+            }
+        }
+
+        void AddSource(string name, string app, bool isShown)
+        {
+            var item = new ToolStripMenuItem(name) { Checked = isShown, CheckOnClick = true };
+            item.Click += delegate
+            {
+                // From the file as it is now, so edits made by hand are kept.
+                var settings = Settings.Load();
+                settings.SetHidden(app, name, !item.Checked);
+                settings.Save();
+            };
+            sourcesItem.DropDownItems.Add(item);
         }
 
         // byHand: from the menu, so say the result either way and install

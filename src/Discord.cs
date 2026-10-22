@@ -3,7 +3,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
+using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
+using Microsoft.Win32.SafeHandles;
 using System.Web.Script.Serialization;
 
 namespace Nowcast
@@ -17,16 +20,44 @@ namespace Nowcast
         readonly JavaScriptSerializer json = new JavaScriptSerializer();
         NamedPipeClientStream pipe;
 
+        [DllImport("kernel32.dll", SetLastError = true)]
+        static extern bool PeekNamedPipe(SafePipeHandle pipe, IntPtr buffer, int size, IntPtr read, out int available, IntPtr left);
+
         public bool IsConnected
         {
             get { return pipe != null; }
         }
 
+        // False once Discord has closed its end: it quit or restarted. Without
+        // this a restart goes unnoticed until the track changes, since only a
+        // write would fail.
+        public bool IsAlive
+        {
+            get
+            {
+                int available;
+                return pipe != null && PeekNamedPipe(pipe.SafePipeHandle, IntPtr.Zero, 0, IntPtr.Zero, out available, IntPtr.Zero);
+            }
+        }
+
         public bool Connect(string clientId)
         {
+            // Only the pipes that exist: waiting on absent ones would hold up
+            // the whole tick every few seconds while Discord is closed.
+            string[] pipes;
+            try
+            {
+                pipes = Directory.GetFiles(@"\\.\pipe\");
+            }
+            catch (Exception)
+            {
+                pipes = new string[0];
+            }
             for (var index = 0; index < 10; index++)
             {
-                var candidate = new NamedPipeClientStream(".", "discord-ipc-" + index, PipeDirection.InOut, PipeOptions.Asynchronous);
+                var name = "discord-ipc-" + index;
+                if (!pipes.Any(p => p.EndsWith("\\" + name, StringComparison.OrdinalIgnoreCase))) continue;
+                var candidate = new NamedPipeClientStream(".", name, PipeDirection.InOut, PipeOptions.Asynchronous);
                 try
                 {
                     candidate.Connect(300);
