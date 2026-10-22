@@ -6,7 +6,8 @@
 
 - `nowcast.ps1`: Windows PowerShell 5.1, без зависимостей. Раз в секунду читает GlobalSystemMediaTransportControls, выбирает играющую сессию (`Select-Track`), шлёт `SET_ACTIVITY` в `\\.\pipe\discord-ipc-N` (кадр: op int32, длина int32, JSON UTF-8). Отправляет только при изменении и не чаще раза в 4 с (лимит Discord 5/20 с).
 - Имя источника (`Get-SourceName`): `names` из config → имя из `Get-StartApps` для `_crx_` (установленные сайты, например SoundCloud) и `!` (приложения Магазина) → встроенные шаблоны → хвост идентификатора.
-- Обложки: iTunes Search API, принимается только при совпадении исполнителя.
+- Обложки: всегда картинка из медиасессии (`Thumbnail`), выкладывается на litterbox.catbox.moe (72h); нет картинки → без `assets`, Discord показывает иконку приложения. Каталоги Deezer/iTunes пробовали и убрали по решению автора. Поток WinRT в 5.1 читается только через `AsStreamForRead`, вызванный рефлексией (`$asStreamForRead.Invoke`).
+- Остановка копий: фильтр `*-File*nowcast.ps1*` и исключение `$PID`, иначе убивается процесс, в чьей команде просто есть это слово.
 - `setup.ps1 install|uninstall`: ярлык в автозагрузке на `conhost.exe --headless powershell.exe … nowcast.ps1` (без окна), остановка по командной строке процесса.
 - `nowcast.ps1 -Check` (или `check.cmd`) печатает сессии без Discord.
 

@@ -229,53 +229,12 @@ function Select-Track($list) {
 
 # --- Обложки -----------------------------------------------------------------
 
-# Discord показывает картинку только по ссылке. Поэтому сначала ищем трек
-# в открытых каталогах Deezer и iTunes (туда уходят исполнитель и название),
-# а если его там нет, как у многих треков SoundCloud, берём картинку,
-# которую плеер отдал Windows, и выкладываем её на litterbox.catbox.moe
-# (временный хостинг картинок, файл живёт трое суток).
+# Обложка — всегда та картинка, которую плеер отдал Windows: ровно то, что
+# видно в самом плеере. Discord показывает картинку только по ссылке,
+# поэтому она выкладывается на litterbox.catbox.moe (временный хостинг,
+# файл живёт трое суток). Нет картинки — в статусе иконка приложения Discord.
 [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
 Add-Type -AssemblyName System.Net.Http
-
-# Чужая песня с похожим названием хуже, чем никакой обложки.
-# Сравниваем только буквы и цифры: ☆LiL PEEP☆ и Lil Peep — один исполнитель.
-function Get-Plain([string]$text) { ($text -replace '[^\p{L}\p{N}]', '').ToLowerInvariant() }
-
-function Test-SameArtist([string]$wanted, [string]$found) {
-    $wanted = Get-Plain $wanted
-    $found = Get-Plain $found
-    $wanted -and $found -and ($found.Contains($wanted) -or $wanted.Contains($found))
-}
-
-# Строка поиска без украшений и приписок: «Lil Peep driveway».
-function Get-SearchTerm($track) {
-    $artist = $track.artist -replace '[^\p{L}\p{N}\s''.&-]', ' '
-    $title = $track.title -replace '\s*[(\[][^)\]]*[)\]]', '' -replace '\s+(?:feat|ft)\.?\s.*$', ''
-    [Uri]::EscapeDataString((("$artist $title" -replace '\s+', ' ').Trim()))
-}
-
-function Find-DeezerCover($track) {
-    if (-not $track.artist) { return $null }
-    $term = Get-SearchTerm $track
-    $answer = Invoke-RestMethod -Uri "https://api.deezer.com/search?q=$term&limit=5" -TimeoutSec 5 -UseBasicParsing
-    foreach ($result in @($answer.data)) {
-        if ((Test-SameArtist $track.artist $result.artist.name) -and $result.album.cover_xl) { return [string]$result.album.cover_xl }
-    }
-    $null
-}
-
-function Find-ItunesCover($track) {
-    if (-not $track.artist) { return $null }
-    $term = Get-SearchTerm $track
-    $answer = Invoke-RestMethod -Uri "https://itunes.apple.com/search?term=$term&entity=song&limit=5" -TimeoutSec 5 -UseBasicParsing
-    if ($answer -is [string]) { $answer = $answer | ConvertFrom-Json }
-    foreach ($result in @($answer.results)) {
-        if ((Test-SameArtist $track.artist $result.artistName) -and $result.artworkUrl100) {
-            return ([string]$result.artworkUrl100) -replace '\d+x\d+bb', '512x512bb'
-        }
-    }
-    $null
-}
 
 # Картинка, которую плеер отдал Windows: байты и тип; $null, если её нет.
 function Read-Thumbnail($track) {
@@ -327,19 +286,15 @@ function Find-Cover($track) {
     $key = Get-Key $track
     if ($coverCache.ContainsKey($key)) { return $coverCache[$key] }
     if ($coverCache.Count -gt 500) { $coverCache.Clear() }
-    $url = $null
-    $failed = $false
-    foreach ($finder in 'Find-DeezerCover', 'Find-ItunesCover', 'Send-Thumbnail') {
-        try {
-            $url = & $finder $track
-        }
-        catch {
-            $failed = $true
-        }
-        if ($url) { break }
+    try {
+        $url = Send-Thumbnail $track
     }
-    # Если что-то не ответило, в кэш не кладём: попробуем на следующем треке.
-    if ($url -or -not $failed) { $coverCache[$key] = $url }
+    catch {
+        # Хостинг не ответил: в кэш не кладём, попробуем на следующем треке.
+        Write-Log "Обложка не выложилась: $($_.Exception.Message)"
+        return $null
+    }
+    $coverCache[$key] = $url
     $url
 }
 
