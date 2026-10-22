@@ -16,7 +16,7 @@ $arguments = "--headless powershell.exe -NoProfile -ExecutionPolicy Bypass -File
 
 function Stop-Nowcast {
     Get-CimInstance Win32_Process -Filter "Name = 'powershell.exe'" |
-        Where-Object { $_.CommandLine -like '*nowcast.ps1*' -and $_.ProcessId -ne $PID } |
+        Where-Object { $_.CommandLine -like '*-File*nowcast.ps1*' -and $_.ProcessId -ne $PID } |
         ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
 }
 

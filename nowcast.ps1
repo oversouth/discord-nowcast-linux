@@ -66,6 +66,9 @@ try {
     $null = [Windows.Media.Control.GlobalSystemMediaTransportControlsSessionManager, Windows.Media.Control, ContentType = WindowsRuntime]
     $managerType = [Windows.Media.Control.GlobalSystemMediaTransportControlsSessionManager]
     $propertiesType = [Windows.Media.Control.GlobalSystemMediaTransportControlsSessionMediaProperties]
+    $null = [Windows.Storage.Streams.IRandomAccessStreamWithContentType, Windows.Storage.Streams, ContentType = WindowsRuntime]
+    $thumbnailType = [Windows.Storage.Streams.IRandomAccessStreamWithContentType]
+    $asStreamForRead = [System.IO.WindowsRuntimeStreamExtensions].GetMethod('AsStreamForRead', [Type[]]@([Windows.Storage.Streams.IInputStream]))
     $manager = Await ($managerType::RequestAsync()) $managerType 15000
 }
 catch {
@@ -104,6 +107,7 @@ function Get-Sessions {
                 artist    = [string]$properties.Artist
                 title     = [string]$properties.Title
                 album     = [string]$properties.AlbumTitle
+                thumbnail = $properties.Thumbnail
                 isPlaying = $session.GetPlaybackInfo().PlaybackStatus -eq 'Playing'
                 isCurrent = $app -eq $currentApp
                 position  = $timeline.position
@@ -225,37 +229,117 @@ function Select-Track($list) {
 
 # --- Обложки -----------------------------------------------------------------
 
-# Discord показывает картинку только по ссылке, поэтому обложку ищем в
-# открытом каталоге iTunes: туда уходят исполнитель и название.
+# Discord показывает картинку только по ссылке. Поэтому сначала ищем трек
+# в открытых каталогах Deezer и iTunes (туда уходят исполнитель и название),
+# а если его там нет, как у многих треков SoundCloud, берём картинку,
+# которую плеер отдал Windows, и выкладываем её на litterbox.catbox.moe
+# (временный хостинг картинок, файл живёт трое суток).
 [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
+Add-Type -AssemblyName System.Net.Http
+
+# Чужая песня с похожим названием хуже, чем никакой обложки.
+# Сравниваем только буквы и цифры: ☆LiL PEEP☆ и Lil Peep — один исполнитель.
+function Get-Plain([string]$text) { ($text -replace '[^\p{L}\p{N}]', '').ToLowerInvariant() }
+
+function Test-SameArtist([string]$wanted, [string]$found) {
+    $wanted = Get-Plain $wanted
+    $found = Get-Plain $found
+    $wanted -and $found -and ($found.Contains($wanted) -or $wanted.Contains($found))
+}
+
+# Строка поиска без украшений и приписок: «Lil Peep driveway».
+function Get-SearchTerm($track) {
+    $artist = $track.artist -replace '[^\p{L}\p{N}\s''.&-]', ' '
+    $title = $track.title -replace '\s*[(\[][^)\]]*[)\]]', '' -replace '\s+(?:feat|ft)\.?\s.*$', ''
+    [Uri]::EscapeDataString((("$artist $title" -replace '\s+', ' ').Trim()))
+}
+
+function Find-DeezerCover($track) {
+    if (-not $track.artist) { return $null }
+    $term = Get-SearchTerm $track
+    $answer = Invoke-RestMethod -Uri "https://api.deezer.com/search?q=$term&limit=5" -TimeoutSec 5 -UseBasicParsing
+    foreach ($result in @($answer.data)) {
+        if ((Test-SameArtist $track.artist $result.artist.name) -and $result.album.cover_xl) { return [string]$result.album.cover_xl }
+    }
+    $null
+}
+
+function Find-ItunesCover($track) {
+    if (-not $track.artist) { return $null }
+    $term = Get-SearchTerm $track
+    $answer = Invoke-RestMethod -Uri "https://itunes.apple.com/search?term=$term&entity=song&limit=5" -TimeoutSec 5 -UseBasicParsing
+    if ($answer -is [string]) { $answer = $answer | ConvertFrom-Json }
+    foreach ($result in @($answer.results)) {
+        if ((Test-SameArtist $track.artist $result.artistName) -and $result.artworkUrl100) {
+            return ([string]$result.artworkUrl100) -replace '\d+x\d+bb', '512x512bb'
+        }
+    }
+    $null
+}
+
+# Картинка, которую плеер отдал Windows: байты и тип; $null, если её нет.
+function Read-Thumbnail($track) {
+    if (-not $track.thumbnail) { return $null }
+    $stream = Await ($track.thumbnail.OpenReadAsync()) $thumbnailType 5000
+    # PowerShell 5.1 не видит интерфейсов этого потока и сам его не передаёт,
+    # а через рефлексию .NET приводит его к нужному типу, как и в Await.
+    $reader = $asStreamForRead.Invoke($null, @($stream))
+    try {
+        $memory = New-Object IO.MemoryStream
+        $reader.CopyTo($memory)
+        $bytes = $memory.ToArray()
+    }
+    finally {
+        $reader.Dispose()
+    }
+    if ($bytes.Length -lt 2) { return $null }
+    # Тип по первым байтам: PNG начинается с 0x89 'P'.
+    $type = if ($bytes[0] -eq 0x89 -and $bytes[1] -eq 0x50) { 'image/png' } else { 'image/jpeg' }
+    @{ bytes = $bytes; type = $type }
+}
+
+function Send-Thumbnail($track) {
+    $image = Read-Thumbnail $track
+    if (-not $image) { return $null }
+    $type = if ($image.type -like 'image/*') { $image.type } else { 'image/jpeg' }
+    $extension = if ($type -eq 'image/png') { '.png' } else { '.jpg' }
+    $client = [System.Net.Http.HttpClient]::new()
+    $client.Timeout = [TimeSpan]::FromSeconds(15)
+    try {
+        $form = [System.Net.Http.MultipartFormDataContent]::new()
+        $form.Add([System.Net.Http.StringContent]::new('fileupload'), 'reqtype')
+        $form.Add([System.Net.Http.StringContent]::new('72h'), 'time')
+        $file = [System.Net.Http.ByteArrayContent]::new($image.bytes)
+        $file.Headers.ContentType = [System.Net.Http.Headers.MediaTypeHeaderValue]::Parse($type)
+        $form.Add($file, 'fileToUpload', "cover$extension")
+        $response = $client.PostAsync('https://litterbox.catbox.moe/resources/internals/api.php', $form).Result
+        $text = $response.Content.ReadAsStringAsync().Result.Trim()
+        if ($response.IsSuccessStatusCode -and $text -match '^https://\S+$') { $text } else { throw "litterbox: $text" }
+    }
+    finally {
+        $client.Dispose()
+    }
+}
+
 $coverCache = @{}
 function Find-Cover($track) {
     if (-not $config.covers -or -not $track.title) { return $null }
-    $key = "$($track.artist)|$($track.title)"
+    $key = Get-Key $track
     if ($coverCache.ContainsKey($key)) { return $coverCache[$key] }
     if ($coverCache.Count -gt 500) { $coverCache.Clear() }
     $url = $null
-    try {
-        $term = [Uri]::EscapeDataString("$($track.artist) $($track.title)".Trim())
-        $answer = Invoke-RestMethod -Uri "https://itunes.apple.com/search?term=$term&entity=song&limit=5" -TimeoutSec 5 -UseBasicParsing
-        if ($answer -is [string]) { $answer = $answer | ConvertFrom-Json }
-        $artist = $track.artist.ToLowerInvariant()
-        foreach ($result in @($answer.results)) {
-            $found = ([string]$result.artistName).ToLowerInvariant()
-            # Чужая песня с похожим названием хуже, чем никакой обложки.
-            if ($artist -and -not ($found.Contains($artist) -or $artist.Contains($found))) { continue }
-            if ($result.artworkUrl100) {
-                $url = ([string]$result.artworkUrl100) -replace '\d+x\d+bb', '512x512bb'
-                break
-            }
+    $failed = $false
+    foreach ($finder in 'Find-DeezerCover', 'Find-ItunesCover', 'Send-Thumbnail') {
+        try {
+            $url = & $finder $track
         }
+        catch {
+            $failed = $true
+        }
+        if ($url) { break }
     }
-    catch {
-        # Нет сети или каталог не ответил: без обложки. В кэш не кладём,
-        # чтобы попробовать ещё раз на следующем треке.
-        return $null
-    }
-    $coverCache[$key] = $url
+    # Если что-то не ответило, в кэш не кладём: попробуем на следующем треке.
+    if ($url -or -not $failed) { $coverCache[$key] = $url }
     $url
 }
 
@@ -416,7 +500,10 @@ if ($Check) {
         Write-Host ("[{0}] {1} — {2} ({3}, {4:0}/{5:0} с) id: {6}" -f $track.source, $track.artist, $track.title, $state, $track.position, $track.duration, $track.app)
     }
     $chosen = Select-Track $list
-    if ($chosen) { Write-Host "В статус пойдёт: $(Get-Key $chosen)" }
+    if ($chosen) {
+        Write-Host "В статус пойдёт: $(Get-Key $chosen)"
+        Write-Host "Обложка: $(Find-Cover $chosen)"
+    }
     exit 0
 }
 
@@ -462,8 +549,10 @@ try {
             if ($changed -and ([DateTime]::Now - $sentAt).TotalSeconds -ge 4) {
                 try {
                     if ($track) {
-                        Set-Activity (New-Activity $track $startedAt)
-                        Write-Log "Статус: $($track.artist) — $($track.title) [$($track.source)]"
+                        $activity = New-Activity $track $startedAt
+                        Set-Activity $activity
+                        $cover = if ($activity.assets) { $activity.assets.large_image } else { 'без обложки' }
+                        Write-Log "Статус: $($track.artist) — $($track.title) [$($track.source)] $cover"
                     }
                     else {
                         Set-Activity $null
