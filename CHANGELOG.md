@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.1
+
+- **Desktop shortcut.** The first start puts a discord-nowcast shortcut on the desktop, next to adding itself to startup. Delete it and it stays deleted; move the exe and the shortcut follows.
+- The source logo in the corner of the cover is gone: Discord showed a question mark instead of it. The `sourceIcons` setting goes with it.
+
+Ярлык на рабочем столе при первом запуске; логотип источника в углу обложки убран.
+
 ## 1.1.0
 
 - **One exe instead of scripts.** discord-nowcast is now a single small `discord-nowcast.exe` with a raven icon: download, run, done. It starts with Windows by itself. The PowerShell 1.0.x is stopped and removed from startup on the first run.

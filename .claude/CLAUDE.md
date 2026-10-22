@@ -7,11 +7,11 @@
 - `Program.cs`: версия (`Version`), один экземпляр (мьютекс `Local\discord-nowcast`, брошенный забирается; после обновления ждём старую копию до 15 с).
 - `Engine.cs`: отдельный STA-поток, раз в секунду `Media.Read` → `Pick` → `Activity.Build` → `Discord.SetActivity`. Отправка только при изменении и не чаще раза в 4 с (лимит Discord 5/20 с). Перечитывает `config.json` по FileSystemWatcher.
 - `WinRT.cs`, `Media.cs`: медиасессии через рефлексию по типам `..., ContentType=WindowsRuntime`, потому что встроенный csc не читает Windows.winmd (его нет без Windows SDK). Ожидание операций через `WindowsRuntimeSystemExtensions.AsTask`, поток обложки через `AsStreamForRead`, оба вызываются рефлексией.
-- `Sources.cs`: имя источника (`names` из настроек → имя из меню «Пуск» через Shell.Application для `_crx_` и `!` → правила), логотип и ссылка поиска для кнопки. Логотипы — `assets/sources/*.png`, ссылки на raw.githubusercontent.com/…/main, так что новые логотипы работают сразу после пуша.
+- `Sources.cs`: имя источника (`names` из настроек → имя из меню «Пуск» через Shell.Application для `_crx_` и `!` → правила) и ссылка поиска для кнопки. Логотип источника в углу обложки (small_image) пробовали в 1.1.0 и убрали по решению автора: Discord показывал вместо него «?».
 - `Covers.cs`: обложка всегда из медиасессии, выкладывается на litterbox.catbox.moe (72h). Нет обложки → нет `assets`, Discord показывает иконку приложения (small_image без large_image не показывается).
-- `Activity.cs`: строки, `status_display_type`, обложка + логотип в углу, полоска, кнопка «Слушать на …» (поиск в том же сервисе, иначе YouTube).
+- `Activity.cs`: строки, `status_display_type`, обложка, полоска, кнопка «Слушать на …» (поиск в том же сервисе, иначе YouTube).
 - `Discord.cs`: `\\.\pipe\discord-ipc-N`, кадр op/длина/JSON, ping→pong.
-- `TrayApp.cs`: NotifyIcon и меню; `Startup.cs`: HKCU Run, удаление 1.0.x (ярлык в Startup + процесс powershell с `-File …nowcast.ps1`); `Updater.cs`: GitHub releases/latest, замена exe через переименование в `.old`.
+- `TrayApp.cs`: NotifyIcon и меню; `Startup.cs`: HKCU Run, ярлык на рабочем столе один раз (маркер `desktop-shortcut` в папке настроек), удаление 1.0.x (ярлык в Startup + процесс powershell с `-File …nowcast.ps1`); `Updater.cs`: GitHub releases/latest, замена exe через переименование в `.old`.
 - `Text.cs`: строки по-русски на русской Windows, иначе по-английски. Лог (`%APPDATA%\discord-nowcast\log.txt`) по-английски.
 
 ## Важно

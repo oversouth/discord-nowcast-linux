@@ -41,12 +41,6 @@ namespace Nowcast
                 // The line under the others: the album, or the source if not written above.
                 var caption = track.Album != "" ? track.Album : (state.StartsWith(source) ? null : source);
                 if (caption != null) assets["large_text"] = Limit(caption);
-                // The source's logo in the corner of the cover.
-                if (settings.SourceIcons && track.Source.IconUrl != null)
-                {
-                    assets["small_image"] = track.Source.IconUrl;
-                    assets["small_text"] = Limit(source);
-                }
             }
             if (assets.Count > 0) activity["assets"] = assets;
 

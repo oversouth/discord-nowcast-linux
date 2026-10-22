@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Management;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using Microsoft.Win32;
@@ -53,6 +54,33 @@ namespace Nowcast
             {
                 var value = key == null ? null : key.GetValue(Name) as string;
                 if (value != null && value != Command) key.SetValue(Name, Command);
+            }
+        }
+
+        // A desktop shortcut, made once: a marker file remembers it, so a
+        // shortcut you deleted stays deleted. One that exists follows the exe
+        // when it moves.
+        public static void DesktopShortcut()
+        {
+            var marker = Path.Combine(Log.Folder, "desktop-shortcut");
+            var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "discord-nowcast.lnk");
+            if (File.Exists(marker) && !File.Exists(path)) return;
+            try
+            {
+                var shellType = Type.GetTypeFromProgID("WScript.Shell");
+                var shell = Activator.CreateInstance(shellType);
+                var link = shellType.InvokeMember("CreateShortcut", BindingFlags.InvokeMethod, null, shell, new object[] { path });
+                var linkType = link.GetType();
+                linkType.InvokeMember("TargetPath", BindingFlags.SetProperty, null, link, new object[] { Application.ExecutablePath });
+                linkType.InvokeMember("WorkingDirectory", BindingFlags.SetProperty, null, link, new object[] { Path.GetDirectoryName(Application.ExecutablePath) });
+                linkType.InvokeMember("IconLocation", BindingFlags.SetProperty, null, link, new object[] { Application.ExecutablePath + ",0" });
+                linkType.InvokeMember("Description", BindingFlags.SetProperty, null, link, new object[] { "discord-nowcast" });
+                linkType.InvokeMember("Save", BindingFlags.InvokeMethod, null, link, null);
+                File.WriteAllText(marker, "");
+            }
+            catch (Exception e)
+            {
+                Log.Write("Desktop shortcut not made: " + e.Message);
             }
         }
 

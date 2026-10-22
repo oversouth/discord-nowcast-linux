@@ -19,7 +19,6 @@ namespace Nowcast
   ""inList"": ""source"",
   ""showPaused"": false,
   ""covers"": true,
-  ""sourceIcons"": true,
   ""buttons"": true,
   ""checkUpdates"": true,
   ""image"": """",
@@ -33,7 +32,6 @@ namespace Nowcast
         public string InList = "source";
         public bool ShowPaused = false;
         public bool Covers = true;
-        public bool SourceIcons = true;
         public bool Buttons = true;
         public bool CheckUpdates = true;
         public string Image = "";
@@ -70,7 +68,6 @@ namespace Nowcast
             InList = Get<string>(values, "inList") ?? InList;
             ShowPaused = Get(values, "showPaused", ShowPaused);
             Covers = Get(values, "covers", Covers);
-            SourceIcons = Get(values, "sourceIcons", SourceIcons);
             Buttons = Get(values, "buttons", Buttons);
             CheckUpdates = Get(values, "checkUpdates", CheckUpdates);
             Image = Get<string>(values, "image") ?? Image;

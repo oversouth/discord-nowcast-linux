@@ -10,19 +10,8 @@ namespace Nowcast
     {
         // As shown in the status: "Яндекс Музыка", "SoundCloud", "Chrome".
         public string Name;
-        // File name of its logo in assets/sources, or null for none.
-        public string Icon;
         // Search page the status button opens, the query appended; null: YouTube.
         public string Search;
-
-        public string IconUrl
-        {
-            get
-            {
-                return Icon == null ? null
-                    : "https://raw.githubusercontent.com/" + Program.Repo + "/main/assets/sources/" + Icon + ".png";
-            }
-        }
     }
 
     // Which app a session comes from, by its app ID.
@@ -32,14 +21,12 @@ namespace Nowcast
         {
             public Regex Pattern;
             public string Name;
-            public string Icon;
             public string Search;
 
-            public Rule(string pattern, string name, string icon, string search)
+            public Rule(string pattern, string name, string search)
             {
                 Pattern = new Regex(pattern, RegexOptions.IgnoreCase);
                 Name = name;
-                Icon = icon;
                 Search = search;
             }
         }
@@ -47,26 +34,26 @@ namespace Nowcast
         // Order matters: Yandex Music before Yandex Browser, YouTube Music before YouTube.
         static readonly Rule[] rules =
         {
-            new Rule(@"yandex.*music|music.*yandex|яндекс.?музык", Text.Ru ? "Яндекс Музыка" : "Yandex Music", "yandexmusic", "https://music.yandex.ru/search?text="),
-            new Rule(@"spotify", "Spotify", "spotify", "https://open.spotify.com/search/"),
-            new Rule(@"soundcloud", "SoundCloud", "soundcloud", "https://soundcloud.com/search?q="),
-            new Rule(@"youtube.?music", "YouTube Music", "youtubemusic", "https://music.youtube.com/search?q="),
-            new Rule(@"youtube", "YouTube", "youtube", "https://www.youtube.com/results?search_query="),
-            new Rule(@"telegram", "Telegram", "telegram", null),
-            new Rule(@"vk.?music|vk музык|vkontakte|\bvk\b", Text.Ru ? "VK Музыка" : "VK Music", "vk", "https://vk.com/audio?q="),
-            new Rule(@"applemusic|apple music|itunes", "Apple Music", "applemusic", "https://music.apple.com/search?term="),
-            new Rule(@"zunemusic", Text.Ru ? "Медиаплеер Windows" : "Windows Media Player", "music", null),
-            new Rule(@"aimp", "AIMP", "music", null),
-            new Rule(@"foobar", "foobar2000", "music", null),
-            new Rule(@"vlc", "VLC", "vlcmediaplayer", null),
-            new Rule(@"musicbee", "MusicBee", "music", null),
-            new Rule(@"yandex|^browser", Text.Ru ? "Яндекс Браузер" : "Yandex Browser", "yandexbrowser", null),
-            new Rule(@"chrome", "Chrome", "googlechrome", null),
-            new Rule(@"msedge|microsoftedge", "Edge", "microsoftedge", null),
-            new Rule(@"firefox|308046B0AF4A39CB", "Firefox", "firefoxbrowser", null),
-            new Rule(@"opera", "Opera", "opera", null),
-            new Rule(@"vivaldi", "Vivaldi", "vivaldi", null),
-            new Rule(@"brave", "Brave", "brave", null),
+            new Rule(@"yandex.*music|music.*yandex|яндекс.?музык", Text.Ru ? "Яндекс Музыка" : "Yandex Music", "https://music.yandex.ru/search?text="),
+            new Rule(@"spotify", "Spotify", "https://open.spotify.com/search/"),
+            new Rule(@"soundcloud", "SoundCloud", "https://soundcloud.com/search?q="),
+            new Rule(@"youtube.?music", "YouTube Music", "https://music.youtube.com/search?q="),
+            new Rule(@"youtube", "YouTube", "https://www.youtube.com/results?search_query="),
+            new Rule(@"telegram", "Telegram", null),
+            new Rule(@"vk.?music|vk музык|vkontakte|\bvk\b", Text.Ru ? "VK Музыка" : "VK Music", "https://vk.com/audio?q="),
+            new Rule(@"applemusic|apple music|itunes", "Apple Music", "https://music.apple.com/search?term="),
+            new Rule(@"zunemusic", Text.Ru ? "Медиаплеер Windows" : "Windows Media Player", null),
+            new Rule(@"aimp", "AIMP", null),
+            new Rule(@"foobar", "foobar2000", null),
+            new Rule(@"vlc", "VLC", null),
+            new Rule(@"musicbee", "MusicBee", null),
+            new Rule(@"yandex|^browser", Text.Ru ? "Яндекс Браузер" : "Yandex Browser", null),
+            new Rule(@"chrome", "Chrome", null),
+            new Rule(@"msedge|microsoftedge", "Edge", null),
+            new Rule(@"firefox|308046B0AF4A39CB", "Firefox", null),
+            new Rule(@"opera", "Opera", null),
+            new Rule(@"vivaldi", "Vivaldi", null),
+            new Rule(@"brave", "Brave", null),
         };
 
         public static SourceInfo Resolve(string app, Settings settings)
@@ -81,13 +68,12 @@ namespace Nowcast
             // the name from the Start menu, so SoundCloud reads as SoundCloud.
             if (name == null && (app.Contains("_crx_") || app.Contains("!"))) name = StartMenuName(app);
 
-            // The logo and the button follow the name when it is known, the app ID otherwise.
+            // The button follows the name when it is known, the app ID otherwise.
             var rule = (name == null ? null : Match(name)) ?? Match(app);
             if (name == null) name = rule != null ? rule.Name : Fallback(app);
             return new SourceInfo
             {
                 Name = name,
-                Icon = rule != null ? rule.Icon : null,
                 Search = rule != null ? rule.Search : null,
             };
         }

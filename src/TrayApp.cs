@@ -85,6 +85,7 @@ namespace Nowcast
             {
                 Startup.Refresh();
             }
+            Startup.DesktopShortcut();
             if (isUpdate) icon.ShowBalloonTip(5000, "discord-nowcast", string.Format(Text.Updated, Program.Version), ToolTipIcon.Info);
 
             engine.Start();

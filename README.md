@@ -25,7 +25,7 @@ Your profile and the server member list show **Listening to …**, just like Spo
 
 - the artist and the track title;
 - where it plays: Yandex Music, Telegram, SoundCloud, Chrome;
-- the cover art, the same picture the player shows, with the source's logo in its corner;
+- the cover art, the same picture the player shows;
 - a progress bar, when the app reports the track length;
 - a **Listen on SoundCloud** button (or Yandex Music, Spotify…) that opens the track for whoever clicks it.
 
@@ -34,7 +34,7 @@ When the music is paused or stops, the status clears itself.
 ## Install
 
 1. **[Download `discord-nowcast.exe`](https://github.com/playsin333/discord-nowcast/releases/latest/download/discord-nowcast.exe)** and put it in a folder you will keep, for example `Documents\discord-nowcast`.
-2. **Run it.** A raven appears by the clock, and from now on it starts with Windows.
+2. **Run it.** A raven appears by the clock, a shortcut appears on the desktop, and from now on it starts with Windows.
 
 That's all: one small file, nothing else to install. It needs Windows 10 or 11 and the Discord desktop app (not the website), with **Settings → Activity Privacy → Share your detected activities with others** turned on.
 
@@ -64,7 +64,6 @@ The raven by the clock, at the bottom right of the screen, is how you control it
 | `inList` | what the member list shows after "Listening to": `source` where it plays (default), `artist`, `title`, or `app` for the application name |
 | `showPaused` | `true` keeps the status on pause, marked as paused |
 | `covers` | `false` turns cover art off |
-| `sourceIcons` | `false` removes the source's logo from the cover's corner |
 | `buttons` | `false` removes the "Listen on …" button |
 | `checkUpdates` | `false` stops the automatic update check |
 | `image` | a picture URL to show when the player gives no cover |
@@ -103,6 +102,6 @@ It uses the C# compiler that ships with .NET Framework 4.8 on every Windows 10 a
 - [Discussions](https://github.com/playsin333/discord-nowcast/discussions): questions, ideas, show your setup.
 - [Report a bug](https://github.com/playsin333/discord-nowcast/issues/new?template=bug.yml): a screenshot of *What Windows sees* and the log help the most.
 
-Changes are listed in [CHANGELOG.md](CHANGELOG.md). Source logos come from [Simple Icons](https://simpleicons.org) (CC0); the brands belong to their owners.
+Changes are listed in [CHANGELOG.md](CHANGELOG.md).
 
 License: [MIT](LICENSE).
