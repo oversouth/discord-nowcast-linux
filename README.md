@@ -58,7 +58,6 @@ Everything lives in `config.json`. After editing it, run `install.cmd` again so 
 | `inList` | what the member list shows after "Listening to": `source` where it plays (default), `artist`, `title`, or `app` for the application name |
 | `showPaused` | `true` keeps the status on pause, marked as paused |
 | `covers` | `false` turns cover art off |
-| `lengths` | `false` stops looking up track lengths on Deezer for players that do not report them |
 | `image` | a picture URL to show when the player gives no cover |
 | `hide` | apps never to show: `["chrome", "Telegram"]` |
 | `names` | your own source names: `{"chrome": "YouTube"}` |
@@ -71,7 +70,6 @@ Example:
   "inList": "source",
   "showPaused": false,
   "covers": true,
-  "lengths": true,
   "image": "",
   "hide": ["Claude"],
   "names": { "chrome": "YouTube" }
@@ -91,11 +89,11 @@ Windows already knows what is playing: it is the track card that pops up when yo
 - The app has to tell Windows what it plays. Almost every app does; if `check.cmd` does not see it, neither does discord-nowcast.
 - A regular browser tab shows up as the browser, not the site: Chrome, not SoundCloud. Install the site as an app, or name it yourself in `names`.
 - Not every player hands over a cover. Telegram, for example, often does not, and then the application icon is shown.
-- The progress bar needs the track length. When the player does not report it (Telegram), the length is looked up on Deezer and the time is counted by discord-nowcast itself; seeking in such a player is not seen, and a track Deezer does not know shows elapsed time instead.
+- The progress bar needs the app to report the track length. Yandex Music, Spotify and most sites do; Telegram does not, so it shows elapsed time.
 
 ## Privacy
 
-The artist and title go to Discord, which is the status itself, and to Deezer only for players that do not report the track length. The cover picture from the player is uploaded to litterbox.catbox.moe; `"covers": false` turns that off. Nothing else is sent anywhere.
+The artist and title go only to Discord: that is the status itself. The cover picture from the player is uploaded to litterbox.catbox.moe; `"covers": false` turns that off. Nothing else is sent anywhere.
 
 The log of the current run is at `%TEMP%\discord-nowcast.log`.
 
