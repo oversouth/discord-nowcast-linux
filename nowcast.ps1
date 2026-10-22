@@ -12,8 +12,11 @@ param(
     [switch]$Check
 )
 
+# Версия: при каждом релизе поднять здесь и добавить запись в CHANGELOG.md.
+$version = '1.0.0'
+
 $ErrorActionPreference = 'Stop'
-$here = Split-Path -Parent $MyInvocation.MyCommand.Path
+$here =Split-Path -Parent $MyInvocation.MyCommand.Path
 $logPath = Join-Path ([IO.Path]::GetTempPath()) 'discord-nowcast.log'
 
 function Write-Log([string]$text) {
@@ -476,7 +479,7 @@ if (-not $isFirst) {
 }
 
 Set-Content -LiteralPath $logPath -Value '' -Encoding UTF8
-Write-Log 'discord-nowcast запущен. Ctrl+C — выход.'
+Write-Log "discord-nowcast $version запущен. Ctrl+C — выход."
 
 $sentKey = $null        # что сейчас в статусе: ключ трека или 'none'
 $sentStart = $null

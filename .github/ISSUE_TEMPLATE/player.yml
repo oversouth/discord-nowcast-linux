@@ -1,0 +1,24 @@
+name: Player not recognized / Плеер не распознаётся
+description: An app plays but is missing or has the wrong name / Приложение играет, но его нет или имя неправильное
+labels: [player]
+body:
+  - type: input
+    id: app
+    attributes:
+      label: App / Приложение
+      placeholder: Yandex Music, AIMP, …
+    validations:
+      required: true
+  - type: textarea
+    id: check
+    attributes:
+      label: Output of check.cmd while it plays / Вывод check.cmd, пока играет
+      description: The `id:` at the end of each line is what is needed. / Нужен `id:` в конце строки.
+      render: text
+    validations:
+      required: true
+  - type: input
+    id: name
+    attributes:
+      label: Name it should have / Каким должно быть имя
+      placeholder: Яндекс Музыка

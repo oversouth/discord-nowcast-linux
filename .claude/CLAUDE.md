@@ -16,4 +16,10 @@
 - `.ps1` хранятся в UTF-8 с BOM и CRLF: в них русские строки, а 5.1 без BOM читает файл в ANSI.
 - Пути у сессии Claude длинные: `git clone` нужен с `-c core.longpaths=true`, а PowerShell 5.1 не запускает скрипты по таким путям. Для проверки копировать в `%TEMP%\nowcast-test`.
 - Проверка без Discord: поддельный сервер на `NamedPipeServerStream('discord-ipc-0')`, который отвечает READY и пишет полученные кадры в лог.
+- README.md на английском, README.ru.md на русском: менять оба. Шаблоны issues двуязычные, вопросы уводятся в Discussions.
+
+## Релизы
+
+- Поднять `$version` в `nowcast.ps1` и добавить `## X.Y.Z` в `CHANGELOG.md` (оттуда заметки релиза). При пуше в `main` `.github/workflows/release.yml` создаёт тег `vX.Y.Z` и релиз с `discord-nowcast.zip` (файлы в CRLF, внутри папка `discord-nowcast`). README ссылается на `releases/latest/download/discord-nowcast.zip`.
+- `gh` на машине автора нет; настройки репозитория (Discussions, описание, темы) автор меняет сам на сайте.
 - Коммиты от имени `playsin <335104183+playsin333@users.noreply.github.com>`, без строки Co-Authored-By.

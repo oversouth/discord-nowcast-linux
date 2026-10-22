@@ -2,57 +2,67 @@
 
 # discord-nowcast
 
-**Трек из любого приложения в статусе Discord.**
+**Show the track from any app in your Discord status.**
 
-Яндекс Музыка, Spotify, SoundCloud, VK, Telegram, YouTube в браузере, AIMP, локальные файлы: всё, что играет в Windows.
+Yandex Music, Spotify, SoundCloud, VK, Telegram, YouTube in a browser, AIMP, local files: anything that plays on Windows.
 
+[![release](https://img.shields.io/github/v/release/playsin333/discord-nowcast?color=5865f2)](https://github.com/playsin333/discord-nowcast/releases/latest)
+[![downloads](https://img.shields.io/github/downloads/playsin333/discord-nowcast/total?color=3d3c38)](https://github.com/playsin333/discord-nowcast/releases)
 ![platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-3d3c38)
-![license](https://img.shields.io/badge/license-MIT-3d3c38)
+[![license](https://img.shields.io/badge/license-MIT-3d3c38)](LICENSE)
+
+**English** · [Русский](README.ru.md)
+
+**[⬇ Download](https://github.com/playsin333/discord-nowcast/releases/latest/download/discord-nowcast.zip)** · [Discussions](https://github.com/playsin333/discord-nowcast/discussions) · [Report a bug](https://github.com/playsin333/discord-nowcast/issues/new?template=bug.yml)
 
 </div>
 
-## Что получится
+## What you get
 
-В профиле и в списке участников сервера появляется «Слушает …», как у Spotify:
+Your profile and the server member list show **Listening to …**, just like Spotify does:
 
-- исполнитель и название трека;
-- откуда играет: «Яндекс Музыка», «Telegram», «SoundCloud», «Chrome»;
-- обложка альбома;
-- полоска времени трека, если приложение его сообщает.
+- the artist and the track title;
+- where it plays: Yandex Music, Telegram, SoundCloud, Chrome;
+- the cover art, the same picture the player shows;
+- a progress bar, when the app reports the track length.
 
-На паузе или когда ничего не играет, статус убирается сам.
+When the music is paused or stops, the status clears itself.
 
-## Установка
+## Install
 
-Ничего ставить не нужно: программа работает на встроенном в Windows PowerShell.
+Nothing else to install: it runs on the PowerShell that ships with Windows.
 
-1. **Скачайте репозиторий**: зелёная кнопка **Code** → **Download ZIP**, распакуйте в любую папку.
-2. **Запустите `install.cmd`.** Программа начнёт работать без окна и будет стартовать вместе с Windows.
+1. **[Download `discord-nowcast.zip`](https://github.com/playsin333/discord-nowcast/releases/latest/download/discord-nowcast.zip)** and unzip it to a folder you will keep, for example `Documents\discord-nowcast`.
+2. **Run `install.cmd`.** It starts in the background with no window and from now on starts with Windows.
 
-Discord должен быть запущен (приложение на компьютере, не сайт), а в **Настройки → Конфиденциальность активности** включено «Делиться обнаруженной активностью».
+If Windows says *"Windows protected your PC"*, click **More info → Run anyway**: the files come from the internet and are not signed.
 
-| Файл | Что делает |
+The Discord desktop app must be running (not the website), with **Settings → Activity Privacy → Share your detected activities with others** turned on.
+
+| File | What it does |
 | --- | --- |
-| `install.cmd` | запускает в фоне и добавляет в автозагрузку |
-| `uninstall.cmd` | останавливает и убирает из автозагрузки |
-| `start.cmd` | запускает в окне, видно, что отправляется в Discord |
-| `check.cmd` | показывает, что сейчас видит Windows, без Discord |
+| `install.cmd` | starts it in the background and adds it to startup |
+| `uninstall.cmd` | stops it and removes it from startup |
+| `start.cmd` | runs it in a window, showing what is sent to Discord |
+| `check.cmd` | shows what Windows reports as playing, without Discord |
 
-## Настройки
+To update, download the new zip, unzip it over the old folder and run `install.cmd` again.
 
-Всё в `config.json`. После правки запустите `install.cmd` ещё раз, чтобы программа перечитала файл.
+## Settings
 
-| Настройка | Что значит |
+Everything lives in `config.json`. After editing it, run `install.cmd` again so the program rereads it.
+
+| Setting | What it means |
 | --- | --- |
-| `clientId` | ID приложения Discord; его имя стоит в заголовке статуса. Чтобы было своё имя, создайте приложение на [discord.com/developers/applications](https://discord.com/developers/applications) (**New Application**) и впишите сюда его **Application ID** |
-| `inList` | что видно в списке участников после «Слушает»: `source` — откуда играет (по умолчанию), `artist` — исполнитель, `title` — трек, `app` — имя приложения Discord |
-| `showPaused` | `true` — не убирать статус на паузе, а писать «пауза» |
-| `covers` | `false` — не искать обложки |
-| `image` | ссылка на картинку, которая показывается, если обложка не нашлась |
-| `hide` | приложения, которые не показывать: `["chrome", "Telegram"]` |
-| `names` | свои названия источников: `{"chrome": "YouTube"}` |
+| `clientId` | the Discord application whose name follows "Listening to". The built-in one works out of the box; for your own name create an app at [discord.com/developers/applications](https://discord.com/developers/applications) (**New Application**) and paste its **Application ID** here |
+| `inList` | what the member list shows after "Listening to": `source` where it plays (default), `artist`, `title`, or `app` for the application name |
+| `showPaused` | `true` keeps the status on pause, marked as paused |
+| `covers` | `false` turns cover art off |
+| `image` | a picture URL to show when the player gives no cover |
+| `hide` | apps never to show: `["chrome", "Telegram"]` |
+| `names` | your own source names: `{"chrome": "YouTube"}` |
 
-Пример:
+Example:
 
 ```json
 {
@@ -66,24 +76,32 @@ Discord должен быть запущен (приложение на комп
 }
 ```
 
-## Как это работает
+## How it works
 
-Windows сама знает, что играет: это та плашка с треком, которая появляется при нажатии кнопок громкости. `nowcast.ps1` раз в секунду читает её (системные медиасессии) и, когда трек меняется, отправляет статус в Discord через его локальный канал, тот же, через который статус ставят игры.
+Windows already knows what is playing: it is the track card that pops up when you press the volume keys. `nowcast.ps1` reads those system media sessions once a second and, when something changes, sends the status to Discord over its local IPC pipe, the same one games use.
 
-- Название источника берётся из идентификатора приложения. Если сайт установлен как приложение (SoundCloud или YouTube Music через «Установить» в Chrome/Edge), берётся его имя из меню «Пуск». Поэтому в статусе будет «SoundCloud», а не «Chrome».
-- Обложка — та же картинка, что в самом плеере: он отдаёт её Windows вместе с треком. Discord показывает картинки только по ссылке из интернета, поэтому она выкладывается на временный хостинг [litterbox.catbox.moe](https://litterbox.catbox.moe) на трое суток. Если плеер картинку не отдал, в статусе иконка приложения Discord.
-- Discord принимает не больше пяти обновлений за 20 секунд, поэтому статус меняется не чаще раза в четыре секунды.
+- **Source name.** Taken from the app's ID. A site installed as an app (SoundCloud or YouTube Music via *Install* in Chrome or Edge) is named as in the Start menu, so the status says SoundCloud, not Chrome.
+- **Cover art.** The picture the player hands to Windows along with the track. Discord only shows pictures by URL, so it is uploaded to the temporary host [litterbox.catbox.moe](https://litterbox.catbox.moe) for three days. If the player gives no picture, Discord shows the application icon.
+- **Rate limit.** Discord accepts at most five updates per 20 seconds, so the status changes at most once every four seconds.
 
-## Ограничения
+## Limitations
 
-- Приложение должно сообщать Windows о треке. Почти все так делают; если `check.cmd` его не видит, программа его тоже не увидит.
-- В обычной вкладке браузера видно только сам браузер, а не сайт: «Chrome», а не «SoundCloud». Чтобы было видно сайт, установите его как приложение или задайте своё название в `names`.
-- Полоска времени есть, только если приложение сообщает длину трека (Яндекс Музыка, Spotify и большинство сайтов сообщают).
+- The app has to tell Windows what it plays. Almost every app does; if `check.cmd` does not see it, neither does discord-nowcast.
+- A regular browser tab shows up as the browser, not the site: Chrome, not SoundCloud. Install the site as an app, or name it yourself in `names`.
+- Not every player hands over a cover. Telegram, for example, often does not, and then the application icon is shown.
+- The progress bar needs the app to report the track length. Yandex Music, Spotify and most sites do.
 
-## Приватность
+## Privacy
 
-Исполнитель и название трека уходят только в Discord (это и есть статус). Картинка обложки из плеера выкладывается на litterbox.catbox.moe. Обложки отключаются настройкой `"covers": false`. Больше ничего никуда не отправляется.
+The artist and title go only to Discord: that is the status itself. The cover picture from the player is uploaded to litterbox.catbox.moe; `"covers": false` turns that off. Nothing else is sent anywhere.
 
-Лог последнего запуска: `%TEMP%\discord-nowcast.log`.
+The log of the current run is at `%TEMP%\discord-nowcast.log`.
 
-Лицензия: [MIT](LICENSE).
+## Questions, bugs, ideas
+
+- [Discussions](https://github.com/playsin333/discord-nowcast/discussions): questions, ideas, show your setup.
+- [Report a bug](https://github.com/playsin333/discord-nowcast/issues/new?template=bug.yml): the output of `check.cmd` and the log help the most.
+
+Changes are listed in [CHANGELOG.md](CHANGELOG.md).
+
+License: [MIT](LICENSE).

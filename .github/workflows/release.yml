@@ -1,0 +1,50 @@
+# Publishes a GitHub release for the version in nowcast.ps1, with its notes
+# taken from CHANGELOG.md and discord-nowcast.zip attached, whenever main gets
+# a version that has none yet.
+name: Release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - nowcast.ps1
+      - CHANGELOG.md
+      - .github/workflows/release.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Release the current version
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=$(grep -oP "^.version = '\K[^']+" nowcast.ps1)
+          [ -n "$version" ] || { echo "no \$version in nowcast.ps1"; exit 1; }
+          tag="v$version"
+          if gh release view "$tag" > /dev/null 2>&1; then
+            echo "$tag is already released"
+            exit 0
+          fi
+
+          awk -v v="$version" '
+            $0 == "## " v { found = 1; next }
+            found && /^## / { exit }
+            found { print }
+          ' CHANGELOG.md | sed '/./,$!d' > notes.md
+          [ -s notes.md ] || echo "Version $version" > notes.md
+
+          # Windows line endings, as .gitattributes asks, and one folder inside.
+          mkdir -p build/discord-nowcast
+          for file in nowcast.ps1 setup.ps1 config.json install.cmd uninstall.cmd start.cmd check.cmd README.md README.ru.md CHANGELOG.md LICENSE; do
+            sed 's/\r$//; s/$/\r/' "$file" > "build/discord-nowcast/$file"
+          done
+          (cd build && zip -qr ../discord-nowcast.zip discord-nowcast)
+
+          gh release create "$tag" discord-nowcast.zip --target "$GITHUB_SHA" --title "discord-nowcast $version" --notes-file notes.md

@@ -1,0 +1,44 @@
+name: Bug / Баг
+description: Something does not work as it should / Что-то работает не так
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for writing! The output of `check.cmd` and the log `%TEMP%\discord-nowcast.log` help the most. Both show track titles; replace them if you'd rather not share.
+
+        Спасибо, что пишешь! Больше всего помогают вывод `check.cmd` и лог `%TEMP%\discord-nowcast.log`. В них видны названия треков; если не хочешь их показывать, замени.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened / Что случилось
+      description: What you did, what you expected, what you saw. / Что делал, что ожидал и что увидел.
+    validations:
+      required: true
+  - type: input
+    id: player
+    attributes:
+      label: Player / Плеер
+      description: Where the music plays. / Где играет музыка.
+      placeholder: Yandex Music, Spotify, SoundCloud in Chrome, Telegram…
+  - type: textarea
+    id: check
+    attributes:
+      label: Output of check.cmd / Вывод check.cmd
+      render: text
+  - type: textarea
+    id: log
+    attributes:
+      label: Log / Лог
+      description: "%TEMP%\\discord-nowcast.log"
+      render: text
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version / Версия Windows
+      placeholder: Windows 11 24H2
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: Screenshot / Скриншот
+      description: Drag a picture here if it helps. / Перетащи картинку, если так понятнее.

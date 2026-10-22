@@ -26,6 +26,10 @@ if ($Action -eq 'install') {
         Write-Host 'Сначала впишите clientId в config.json (как его получить — в README).' -ForegroundColor Yellow
         exit 1
     }
+    # Файлы из скачанного архива помечены «из интернета»; снимаем пометку,
+    # чтобы Windows не спрашивала при каждом запуске.
+    Get-ChildItem -LiteralPath $here -File | Unblock-File
+
     $shell = New-Object -ComObject WScript.Shell
     $link = $shell.CreateShortcut($shortcut)
     $link.TargetPath = $target
