@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.1
+
+- **Progress bar for Telegram** and other players that report no track length: the length is looked up on Deezer and the time is counted by discord-nowcast itself. Turn off with `"lengths": false`.
+- The source is no longer shown twice in the card ("Telegram / Telegram") when the track has no album.
+
+Полоска времени и для Telegram (длина трека ищется в Deezer), источник больше не повторяется дважды.
+
 ## 1.0.0
 
 The first release.

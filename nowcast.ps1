@@ -13,7 +13,7 @@ param(
 )
 
 # Версия: при каждом релизе поднять здесь и добавить запись в CHANGELOG.md.
-$version = '1.0.0'
+$version = '1.0.1'
 
 $ErrorActionPreference = 'Stop'
 $here =Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -32,6 +32,7 @@ $config = @{
     inList     = 'source'
     showPaused = $false
     covers     = $true
+    lengths    = $true
     image      = ''
     hide       = @()
     names      = @{}
@@ -301,6 +302,79 @@ function Find-Cover($track) {
     $url
 }
 
+# --- Длина трека, если плеер её не сообщает ------------------------------------
+
+# Некоторые плееры (Telegram) не сообщают Windows ни длину трека, ни позицию,
+# и Discord тогда показывает только «прошло 0:03» без полоски. Длину узнаём
+# в каталоге Deezer по исполнителю и названию, а сколько трек уже играет,
+# считаем сами. Перемотку в таком плеере не видно.
+
+# Сравниваем только буквы и цифры: ☆LiL PEEP☆ и Lil Peep — один исполнитель.
+function Get-Plain([string]$text) { ($text -replace '[^\p{L}\p{N}]', '').ToLowerInvariant() }
+
+function Test-Similar([string]$wanted, [string]$found) {
+    $wanted = Get-Plain $wanted
+    $found = Get-Plain $found
+    $wanted -and $found -and ($found.Contains($wanted) -or $wanted.Contains($found))
+}
+
+$lengthCache = @{}
+function Find-Length($track) {
+    if (-not $config.lengths -or -not $track.artist -or -not $track.title) { return 0 }
+    $key = Get-Key $track
+    if ($lengthCache.ContainsKey($key)) { return $lengthCache[$key] }
+    if ($lengthCache.Count -gt 500) { $lengthCache.Clear() }
+    # Без украшений и приписок: «Lil Peep driveway».
+    $artist = $track.artist -replace '\s+(?:feat|ft)\.?\s.*$', '' -replace '[^\p{L}\p{N}\s''.&-]', ' '
+    $title = $track.title -replace '\s*[(\[][^)\]]*[)\]]', '' -replace '\s+(?:feat|ft)\.?\s.*$', ''
+    $term = [Uri]::EscapeDataString((("$artist $title" -replace '\s+', ' ').Trim()))
+    try {
+        $answer = Invoke-RestMethod -Uri "https://api.deezer.com/search?q=$term&limit=5" -TimeoutSec 5 -UseBasicParsing
+    }
+    catch {
+        # Нет сети: в кэш не кладём, попробуем ещё раз.
+        return 0
+    }
+    $length = 0
+    foreach ($result in @($answer.data)) {
+        # Чужая песня с похожим названием даст неправильную полоску.
+        if ((Test-Similar $track.artist $result.artist.name) -and (Test-Similar $title $result.title)) {
+            $length = [double]$result.duration
+            break
+        }
+    }
+    $lengthCache[$key] = $length
+    $length
+}
+
+# Сколько играет трек, по нашим часам. Пауза не считается: пока статус
+# убран, часы не идут, а большой разрыв между тиками пропускаем.
+$clock = @{ key = $null; played = 0.0; tick = [DateTime]::MinValue }
+function Update-Clock($track) {
+    $now = [DateTime]::Now
+    $key = Get-Key $track
+    if ($key -ne $clock.key) {
+        $clock.key = $key
+        $clock.played = 0.0
+    }
+    elseif ($track.isPlaying) {
+        $step = ($now - $clock.tick).TotalSeconds
+        if ($step -lt 5) { $clock.played += $step }
+    }
+    $clock.tick = $now
+}
+
+# Дописывает длину и позицию треку, у которого их нет.
+function Add-Length($track) {
+    if ($track.duration -gt 0) { return }
+    Update-Clock $track
+    $length = Find-Length $track
+    if ($length -le 0) { return }
+    $track.duration = $length
+    $track.position = [math]::Min($clock.played, $length)
+    $track.updatedAt = 0
+}
+
 # --- Статус ------------------------------------------------------------------
 
 # Discord принимает строки от 2 до 128 символов.
@@ -356,7 +430,9 @@ function New-Activity($track, $startedAt) {
     $image = if ($cover) { $cover } elseif ($config.image) { [string]$config.image } else { $null }
     if ($image) {
         $assets.large_image = $image
-        $assets.large_text = Limit $(if ($track.album) { $track.album } else { $track.source })
+        # Подпись под строками: альбом. Источник, если он ещё не написан выше.
+        $caption = if ($track.album) { $track.album } elseif ($activity.state -notlike "$($track.source)*") { $track.source }
+        if ($caption) { $assets.large_text = Limit $caption }
     }
     if ($assets.Count -gt 0) { $activity.assets = $assets }
 
@@ -495,6 +571,7 @@ try {
 
         $track = $null
         try { $track = Select-Track (Get-Sessions) } catch { }
+        if ($track) { Add-Length $track }
 
         if ($script:pipe) {
             $key = if ($track) { Get-Key $track } else { 'none' }
