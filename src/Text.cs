@@ -1,0 +1,49 @@
+using System.Globalization;
+
+namespace Nowcast
+{
+    // Interface strings: Russian on a Russian Windows, English elsewhere.
+    // Strings shown in Discord follow the same rule.
+    static class Text
+    {
+        public static readonly bool Ru = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "ru";
+
+        static string T(string ru, string en)
+        {
+            return Ru ? ru : en;
+        }
+
+        public static readonly string AlreadyRunning = T(
+            "discord-nowcast уже работает: его значок у часов, в правом нижнем углу экрана.",
+            "discord-nowcast is already running: its icon is by the clock, at the bottom right of the screen.");
+        public static readonly string Running = T(
+            "discord-nowcast работает. Его значок здесь, у часов: нажмите на него, чтобы открыть меню.",
+            "discord-nowcast is running. Its icon lives here, by the clock: click it for the menu.");
+        public static readonly string Updated = T("Обновлено до версии {0}.", "Updated to version {0}.");
+
+        public static readonly string NothingPlaying = T("Ничего не играет", "Nothing is playing");
+        public static readonly string DiscordOff = T("Discord не запущен", "Discord is not running");
+        public static readonly string HiddenUntil = T("Статус скрыт до {0:HH:mm}", "Status hidden until {0:t}");
+        public static readonly string Starting = T("Запускается…", "Starting…");
+
+        public static readonly string HideHour = T("Скрыть статус на час", "Hide status for an hour");
+        public static readonly string ShowAgain = T("Снова показывать статус", "Show status again");
+        public static readonly string WhatWindowsSees = T("Что видит Windows", "What Windows sees");
+        public static readonly string NoSessions = T("Ни одно приложение не сообщает о треке", "No app reports a track");
+        public static readonly string Playing = T("играет", "playing");
+        public static readonly string Paused = T("пауза", "paused");
+        public static readonly string Autostart = T("Запускать вместе с Windows", "Start with Windows");
+        public static readonly string Settings = T("Настройки (config.json)", "Settings (config.json)");
+        public static readonly string OpenLog = T("Открыть лог", "Open log");
+        public static readonly string CheckUpdates = T("Проверить обновления", "Check for updates");
+        public static readonly string UpdateTo = T("Обновить до {0}", "Update to {0}");
+        public static readonly string UpToDate = T("У вас последняя версия, {0}.", "You have the latest version, {0}.");
+        public static readonly string UpdateAvailable = T("Вышла версия {0}. Нажмите, чтобы обновить.", "Version {0} is out. Click to update.");
+        public static readonly string UpdateFailed = T("Не получилось: {0}", "That didn't work: {0}");
+        public static readonly string GitHub = T("Страница на GitHub", "GitHub page");
+        public static readonly string Exit = T("Выход", "Exit");
+
+        public static readonly string ListenOn = T("Слушать на {0}", "Listen on {0}");
+        public static readonly string FindOnYouTube = T("Найти на YouTube", "Find on YouTube");
+    }
+}

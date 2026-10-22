@@ -5,9 +5,9 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for writing! The output of `check.cmd` and the log `%TEMP%\discord-nowcast.log` help the most. Both show track titles; replace them if you'd rather not share.
+        Thanks for writing! A screenshot of *What Windows sees* from the tray menu and the log (tray menu → *Open log*) help the most. Both show track titles; replace them if you'd rather not share.
 
-        Спасибо, что пишешь! Больше всего помогают вывод `check.cmd` и лог `%TEMP%\discord-nowcast.log`. В них видны названия треков; если не хочешь их показывать, замени.
+        Спасибо, что пишешь! Больше всего помогают скриншот «Что видит Windows» из меню у часов и лог (меню у часов → «Открыть лог»). В них видны названия треков; если не хочешь их показывать, замени.
   - type: textarea
     id: what
     attributes:
@@ -24,13 +24,13 @@ body:
   - type: textarea
     id: check
     attributes:
-      label: Output of check.cmd / Вывод check.cmd
-      render: text
+      label: What Windows sees / Что видит Windows
+      description: Tray menu → What Windows sees. A screenshot works too. / Меню у часов → «Что видит Windows». Можно скриншотом.
   - type: textarea
     id: log
     attributes:
       label: Log / Лог
-      description: "%TEMP%\\discord-nowcast.log"
+      description: "Tray menu → Open log / Меню у часов → Открыть лог (%APPDATA%\\discord-nowcast\\log.txt)"
       render: text
   - type: input
     id: windows

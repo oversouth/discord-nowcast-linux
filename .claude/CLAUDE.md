@@ -1,25 +1,30 @@
 # discord-nowcast
 
-Показывает в статусе Discord («Слушает …», activity type 2) трек, который играет в любом приложении Windows. Родственный проект: `playsin333/claude-code-player`, оттуда взято чтение медиасессий (`helper/now-playing.ps1`).
+Показывает в статусе Discord («Слушает …», activity type 2) трек, который играет в любом приложении Windows. Один `discord-nowcast.exe` со значком в трее. Родственный проект: `playsin333/claude-code-player`, оттуда взято чтение медиасессий.
 
-## Как устроено
+## Как устроено (src/)
 
-- `nowcast.ps1`: Windows PowerShell 5.1, без зависимостей. Раз в секунду читает GlobalSystemMediaTransportControls, выбирает играющую сессию (`Select-Track`), шлёт `SET_ACTIVITY` в `\\.\pipe\discord-ipc-N` (кадр: op int32, длина int32, JSON UTF-8). Отправляет только при изменении и не чаще раза в 4 с (лимит Discord 5/20 с).
-- Имя источника (`Get-SourceName`): `names` из config → имя из `Get-StartApps` для `_crx_` (установленные сайты, например SoundCloud) и `!` (приложения Магазина) → встроенные шаблоны → хвост идентификатора.
-- Обложки: всегда картинка из медиасессии (`Thumbnail`), выкладывается на litterbox.catbox.moe (72h); нет картинки → без `assets`, Discord показывает иконку приложения. Каталоги Deezer/iTunes пробовали и убрали по решению автора. Поток WinRT в 5.1 читается только через `AsStreamForRead`, вызванный рефлексией (`$asStreamForRead.Invoke`).
-- Остановка копий: фильтр `*-File*nowcast.ps1*` и исключение `$PID`, иначе убивается процесс, в чьей команде просто есть это слово.
-- `setup.ps1 install|uninstall`: ярлык в автозагрузке на `conhost.exe --headless powershell.exe … nowcast.ps1` (без окна), остановка по командной строке процесса.
-- `nowcast.ps1 -Check` (или `check.cmd`) печатает сессии без Discord.
+- `Program.cs`: версия (`Version`), один экземпляр (мьютекс `Local\discord-nowcast`, брошенный забирается; после обновления ждём старую копию до 15 с).
+- `Engine.cs`: отдельный STA-поток, раз в секунду `Media.Read` → `Pick` → `Activity.Build` → `Discord.SetActivity`. Отправка только при изменении и не чаще раза в 4 с (лимит Discord 5/20 с). Перечитывает `config.json` по FileSystemWatcher.
+- `WinRT.cs`, `Media.cs`: медиасессии через рефлексию по типам `..., ContentType=WindowsRuntime`, потому что встроенный csc не читает Windows.winmd (его нет без Windows SDK). Ожидание операций через `WindowsRuntimeSystemExtensions.AsTask`, поток обложки через `AsStreamForRead`, оба вызываются рефлексией.
+- `Sources.cs`: имя источника (`names` из настроек → имя из меню «Пуск» через Shell.Application для `_crx_` и `!` → правила), логотип и ссылка поиска для кнопки. Логотипы — `assets/sources/*.png`, ссылки на raw.githubusercontent.com/…/main, так что новые логотипы работают сразу после пуша.
+- `Covers.cs`: обложка всегда из медиасессии, выкладывается на litterbox.catbox.moe (72h). Нет обложки → нет `assets`, Discord показывает иконку приложения (small_image без large_image не показывается).
+- `Activity.cs`: строки, `status_display_type`, обложка + логотип в углу, полоска, кнопка «Слушать на …» (поиск в том же сервисе, иначе YouTube).
+- `Discord.cs`: `\\.\pipe\discord-ipc-N`, кадр op/длина/JSON, ping→pong.
+- `TrayApp.cs`: NotifyIcon и меню; `Startup.cs`: HKCU Run, удаление 1.0.x (ярлык в Startup + процесс powershell с `-File …nowcast.ps1`); `Updater.cs`: GitHub releases/latest, замена exe через переименование в `.old`.
+- `Text.cs`: строки по-русски на русской Windows, иначе по-английски. Лог (`%APPDATA%\discord-nowcast\log.txt`) по-английски.
 
 ## Важно
 
-- `.ps1` хранятся в UTF-8 с BOM и CRLF: в них русские строки, а 5.1 без BOM читает файл в ANSI.
-- Пути у сессии Claude длинные: `git clone` нужен с `-c core.longpaths=true`, а PowerShell 5.1 не запускает скрипты по таким путям. Для проверки копировать в `%TEMP%\nowcast-test`.
-- Проверка без Discord: поддельный сервер на `NamedPipeServerStream('discord-ipc-0')`, который отвечает READY и пишет полученные кадры в лог.
+- Код на C# 5: `build.ps1` собирает встроенным `Framework64\v4.0.30319\csc.exe`. Нельзя `$""`, `?.`, `nameof`, `=>`-члены, инициализаторы автосвойств, `out var`.
+- Пути у сессии Claude длинные: `git clone -c core.longpaths=true`; PowerShell 5.1 не запускает `-File` по длинному абсолютному пути (относительный из текущей папки работает).
+- Не писать в командах проверки текст вида `-File путь\nowcast.ps1`: exe при запуске убивает такие процессы powershell (это удаление 1.0.x).
+- Тестовый запуск из временной папки: заранее создать `%APPDATA%\discord-nowcast\config.json`, иначе первый запуск пропишет автозапуск на временный путь.
+- Иконка `assets/icon.ico`: маленькие размеры — классические DIB, не PNG, иначе System.Drawing.Icon и трей рисуют мусор. Сделана из картинки ворона автора.
 - README.md на английском, README.ru.md на русском: менять оба. Шаблоны issues двуязычные, вопросы уводятся в Discussions.
 
 ## Релизы
 
-- Поднять `$version` в `nowcast.ps1` и добавить `## X.Y.Z` в `CHANGELOG.md` (оттуда заметки релиза). При пуше в `main` `.github/workflows/release.yml` создаёт тег `vX.Y.Z` и релиз с `discord-nowcast.zip` (файлы в CRLF, внутри папка `discord-nowcast`). README ссылается на `releases/latest/download/discord-nowcast.zip`.
+- Поднять `Version` в `src/Program.cs` и добавить `## X.Y.Z` в `CHANGELOG.md` (оттуда заметки релиза). При пуше в `main` `.github/workflows/release.yml` на windows-latest собирает exe и создаёт релиз `vX.Y.Z` с `discord-nowcast.exe`. README ссылается на `releases/latest/download/discord-nowcast.exe`, а программа обновляется из этого же ассета.
 - `gh` на машине автора нет; настройки репозитория (Discussions, описание, темы) автор меняет сам на сайте.
 - Коммиты от имени `playsin <335104183+playsin333@users.noreply.github.com>`, без строки Co-Authored-By.

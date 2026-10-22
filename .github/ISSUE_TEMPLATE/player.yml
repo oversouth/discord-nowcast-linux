@@ -12,9 +12,8 @@ body:
   - type: textarea
     id: check
     attributes:
-      label: Output of check.cmd while it plays / Вывод check.cmd, пока играет
-      description: The `id:` at the end of each line is what is needed. / Нужен `id:` в конце строки.
-      render: text
+      label: What Windows sees while it plays / «Что видит Windows», пока играет
+      description: Tray menu → What Windows sees; a click on a line copies its app ID, paste it here. / Меню у часов → «Что видит Windows»; нажатие на строку копирует ID приложения, вставьте его сюда.
     validations:
       required: true
   - type: input

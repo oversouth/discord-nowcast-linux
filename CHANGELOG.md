@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.1.0
+
+- **One exe instead of scripts.** discord-nowcast is now a single small `discord-nowcast.exe` with a raven icon: download, run, done. It starts with Windows by itself. The PowerShell 1.0.x is stopped and removed from startup on the first run.
+- **Tray icon.** A raven by the clock: the current track on hover, and a menu to hide the status for an hour, see what Windows reports, turn starting with Windows on or off, open the settings and the log, check for updates, exit.
+- **Source logo on the cover.** Yandex Music, Spotify, SoundCloud, Telegram, YouTube, VK, Apple Music and browsers get their logo in the corner of the cover. Off with `"sourceIcons": false`.
+- **"Listen on …" button** in the status: a search for the track in the same service, YouTube for Telegram and browsers. Off with `"buttons": false`.
+- **Updates.** Checks GitHub every six hours and updates itself in place on a click. Off with `"checkUpdates": false`.
+- Settings moved to `%APPDATA%\discord-nowcast\config.json` and apply as soon as the file is saved. The interface is in Russian on a Russian Windows and in English elsewhere.
+
+Один .exe вместо скриптов, значок у часов с меню, логотип источника на обложке, кнопка «Слушать на …» и обновление в один клик.
+
 ## 1.0.2
 
 - Track length is no longer looked up on Deezer for players that do not report it: the bar went wrong after seeking, which discord-nowcast cannot see. Such players (Telegram) show elapsed time again, and nothing goes to Deezer.
