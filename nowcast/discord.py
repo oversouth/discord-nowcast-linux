@@ -1,8 +1,9 @@
-"""Discord IPC client over Linux Unix Domain Sockets."""
+"""Discord IPC client over Linux Unix Domain Sockets (including Flatpak / Vesktop)."""
 import json
 import os
 import struct
 import socket
+import glob
 import uuid
 from typing import Optional, Dict, Any, Tuple
 from nowcast.log import Logger
@@ -17,6 +18,7 @@ class DiscordIPC:
     def __init__(self):
         self.sock: Optional[socket.socket] = None
         self.client_id: Optional[str] = None
+        self.connected_path: Optional[str] = None
 
     @property
     def is_connected(self) -> bool:
@@ -40,47 +42,68 @@ class DiscordIPC:
         except Exception:
             return False
 
-    def connect(self, client_id: str) -> bool:
-        if self.sock:
-            self.dispose()
-
-        candidate_dirs = [
-            os.environ.get("XDG_RUNTIME_DIR", ""),
-            f"/run/user/{os.getuid()}",
+    def _discover_sockets(self):
+        uid = os.getuid()
+        xdg_run = os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{uid}")
+        
+        candidates = [
+            # Standard Discord / Linux locations
+            xdg_run,
+            f"/run/user/{uid}",
             os.environ.get("TMPDIR", ""),
             "/tmp",
             os.environ.get("TEMP", ""),
+            # Flatpak / Vesktop / sandbox locations
+            f"/run/user/{uid}/.flatpak/dev.vencord.Vesktop/xdg-run",
+            f"/run/user/{uid}/app/dev.vencord.Vesktop",
+            f"/run/user/{uid}/.flatpak/com.discordapp.Discord/xdg-run",
+            f"/run/user/{uid}/app/com.discordapp.Discord",
         ]
+        
+        # Add dynamic glob discovery for flatpak sandbox dirs
+        flatpak_runs = glob.glob(f"/run/user/{uid}/.flatpak/*/xdg-run")
+        candidates.extend(flatpak_runs)
 
-        for base in candidate_dirs:
+        found = []
+        for base in candidates:
             if not base or not os.path.isdir(base):
                 continue
             for i in range(10):
                 path = os.path.join(base, f"discord-ipc-{i}")
-                if not os.path.exists(path):
-                    continue
-                s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-                s.settimeout(0.5)
-                try:
-                    s.connect(path)
-                except Exception:
-                    s.close()
-                    continue
+                if os.path.exists(path) and path not in found:
+                    found.append(path)
+        return found
 
-                try:
-                    self._send_raw(s, HANDSHAKE, {"v": 1, "client_id": client_id})
-                    reply = self._read_raw(s)
-                    if reply and reply.get("evt") == "READY":
-                        self.sock = s
-                        self.client_id = client_id
-                        user = (reply.get("data") or {}).get("user", {})
-                        username = user.get("username", "")
-                        Logger.write(f"Connected to Discord (IPC socket {path})" + (f" as {username}" if username else ""))
-                        return True
-                    Logger.write(f"Discord handshake refused on {path}: {reply}")
-                except Exception as e:
-                    Logger.write(f"Discord handshake error on {path}: {e}")
+    def connect(self, client_id: str) -> bool:
+        if self.sock:
+            self.dispose()
+
+        socket_paths = self._discover_sockets()
+
+        for path in socket_paths:
+            s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            s.settimeout(0.5)
+            try:
+                s.connect(path)
+            except Exception:
                 s.close()
+                continue
+
+            try:
+                self._send_raw(s, HANDSHAKE, {"v": 1, "client_id": client_id})
+                reply = self._read_raw(s)
+                if reply and reply.get("evt") == "READY":
+                    self.sock = s
+                    self.client_id = client_id
+                    self.connected_path = path
+                    user = (reply.get("data") or {}).get("user", {})
+                    username = user.get("username", "")
+                    Logger.write(f"Connected to Discord/Vesktop via {path}" + (f" as {username}" if username else ""))
+                    return True
+                Logger.write(f"Handshake refused on {path}: {reply}")
+            except Exception as e:
+                Logger.write(f"Handshake error on {path}: {e}")
+            s.close()
 
         return False
 
@@ -117,6 +140,7 @@ class DiscordIPC:
                 pass
             self.sock = None
             self.client_id = None
+            self.connected_path = None
 
     def _send_raw(self, sock: socket.socket, op: int, body: Any):
         data = json.dumps(body, separators=(",", ":")).encode("utf-8")
