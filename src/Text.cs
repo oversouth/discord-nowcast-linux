@@ -57,6 +57,7 @@ namespace Nowcast
         public static readonly string UpToDate = T("У вас последняя версия, {0}.", "You have the latest version, {0}.");
         public static readonly string UpdateAvailable = T("Вышла версия {0}. Нажмите, чтобы обновить.", "Version {0} is out. Click to update.");
         public static readonly string UpdateFailed = T("Не получилось: {0}", "That didn't work: {0}");
+        public static readonly string DiscordServer = T("Сервер в Discord: вопросы и баги", "Discord server: questions and bugs");
         public static readonly string GitHub = T("Страница на GitHub", "GitHub page");
         public static readonly string Exit = T("Выход", "Exit");
 

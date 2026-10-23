@@ -75,6 +75,13 @@ namespace Nowcast
             layout.Controls.Add(autostart);
             layout.Controls.Add(checkUpdates);
 
+            if (Program.DiscordInvite != "")
+            {
+                var server = Link(Strings.DiscordServer, delegate { Browse(Program.DiscordInvite); });
+                server.Margin = new Padding(0, 12, 0, 0);
+                layout.Controls.Add(server);
+            }
+
             var links = new FlowLayoutPanel { AutoSize = true, Margin = new Padding(0, 12, 0, 0) };
             links.Controls.Add(Link(Strings.OpenLog, delegate { Open(Log.FilePath); }));
             links.Controls.Add(Link(Strings.Advanced, delegate { Open(Settings.FilePath); }));
@@ -217,6 +224,18 @@ namespace Nowcast
             };
             link.LinkClicked += (sender, e) => click(sender, e);
             return link;
+        }
+
+        static void Browse(string url)
+        {
+            try
+            {
+                Process.Start(url);
+            }
+            catch (Exception e)
+            {
+                Log.Write("Could not open " + url + ": " + e.Message);
+            }
         }
 
         static void Open(string file)

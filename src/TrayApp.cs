@@ -56,6 +56,7 @@ namespace Nowcast
             menu.Items.Add(Text.OpenLog, null, delegate { Open("notepad.exe", Log.FilePath); });
             menu.Items.Add(updateItem);
             menu.Items.Add(new ToolStripSeparator());
+            if (Program.DiscordInvite != "") menu.Items.Add(Text.DiscordServer, null, delegate { Open(Program.DiscordInvite, null); });
             menu.Items.Add(Text.GitHub, null, delegate { Open("https://github.com/" + Program.Repo, null); });
             menu.Items.Add(Text.Exit, null, delegate { ExitThread(); });
             menu.Opening += delegate { RefreshMenu(); };
