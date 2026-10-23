@@ -25,6 +25,7 @@ namespace Nowcast
         public static readonly string DiscordOff = T("Discord не запущен", "Discord is not running");
         public static readonly string HiddenUntil = T("Статус скрыт до {0:HH:mm}", "Status hidden until {0:t}");
         public static readonly string MediaUnavailable = T("Windows не даёт узнать, что играет", "Windows won't tell what is playing");
+        public static readonly string MediaRemoved = T("Урезанная сборка Windows: нет поддержки медиа", "This Windows build has no media support");
         public static readonly string Starting = T("Запускается…", "Starting…");
 
         public static readonly string HideHour = T("Скрыть статус на час", "Hide status for an hour");

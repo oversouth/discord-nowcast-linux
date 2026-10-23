@@ -92,10 +92,13 @@ namespace Nowcast
                 }
                 catch (Exception e)
                 {
-                    var error = Describe(e);
+                    var cause = Unwrap(e);
+                    var error = Describe(cause);
                     if (error != lastError) Log.Write("Media sessions unavailable: " + error);
                     lastError = error;
-                    Report(Text.MediaUnavailable);
+                    // "Class not registered": the media sessions were cut out of
+                    // this Windows (custom builds), no player can be read here.
+                    Report(cause.HResult == unchecked((int)0x80040154) ? Text.MediaRemoved : Text.MediaUnavailable);
                     wake.WaitOne(30000);
                 }
             }
@@ -264,14 +267,19 @@ namespace Nowcast
             return line + " · " + track.Source.Name;
         }
 
-        // The error underneath the task and reflection wrappers, with its code:
+        // The error underneath the task and reflection wrappers:
         // "One or more errors occurred" alone says nothing.
-        static string Describe(Exception e)
+        static Exception Unwrap(Exception e)
         {
             while ((e is AggregateException || e is System.Reflection.TargetInvocationException) && e.InnerException != null)
             {
                 e = e.InnerException;
             }
+            return e;
+        }
+
+        static string Describe(Exception e)
+        {
             return e.GetType().Name + " 0x" + e.HResult.ToString("X8") + ": " + e.Message;
         }
 
