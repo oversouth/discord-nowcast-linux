@@ -122,6 +122,13 @@ namespace Nowcast
                     holds = true;
                 }
                 if (!holds) continue;
+                // A playing SoundCloud tab is titled "▶ Title by Artist", without the site's name.
+                if (title.Length >= 2 && artist.Length >= 2 &&
+                    window.IndexOf(title + " by " + artist, StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    var soundCloud = Match("soundcloud");
+                    return Info(soundCloud.Name, soundCloud);
+                }
                 var rule = Match(rest);
                 if (rule != null && rule.ClientId != null) return Info(rule.Name, rule);
             }
