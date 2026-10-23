@@ -22,6 +22,7 @@ namespace Nowcast
         string sentKey;
         long? sentStart;
         bool? sentPlaying;
+        bool sentCover;
         DateTime sentAt = DateTime.MinValue;
         DateTime nextConnect = DateTime.MinValue;
         DateTime? resendAt;
@@ -172,7 +173,9 @@ namespace Nowcast
             // A seek: the start of the track moved by more than 3 seconds.
             var jumped = start.HasValue && sentStart.HasValue && Math.Abs(start.Value - sentStart.Value) > 3000;
             var isResend = resendAt.HasValue && DateTime.Now >= resendAt.Value;
-            var changed = key != sentKey || playing != sentPlaying || jumped || isResend;
+            // A cover that was not there when the track started may have come since.
+            var coverCame = key == sentKey && track != null && !sentCover && settings.Covers && Covers.IsDue(key);
+            var changed = key != sentKey || playing != sentPlaying || jumped || isResend || coverCame;
             // Discord takes at most 5 updates per 20 seconds.
             if (!changed || (DateTime.Now - sentAt).TotalSeconds < 4) return;
             if (isResend) resendAt = null;
@@ -187,6 +190,10 @@ namespace Nowcast
                 else
                 {
                     var activity = Activity.Build(track, start, settings);
+                    var hasCover = activity.ContainsKey("assets") && ((Dictionary<string, object>)activity["assets"]).ContainsKey("large_image");
+                    // Looked again and still none: nothing new to send.
+                    if (coverCame && !hasCover && key == sentKey && playing == sentPlaying && !jumped && !isResend) return;
+                    sentCover = hasCover;
                     discord.SetActivity(activity);
                     Log.Write("Status: " + Describe(track) + (activity.ContainsKey("assets") ? "" : " (no cover)"));
                 }
