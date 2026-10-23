@@ -94,8 +94,8 @@ namespace Nowcast
             return false;
         }
 
-        // null clears the status.
-        public void SetActivity(Dictionary<string, object> activity)
+        // null clears the status. Returns Discord's complaint, or null when it took it.
+        public string SetActivity(Dictionary<string, object> activity)
         {
             var arguments = new Dictionary<string, object> { { "pid", Process.GetCurrentProcess().Id } };
             if (activity != null) arguments["activity"] = activity;
@@ -109,8 +109,11 @@ namespace Nowcast
             if (Value(reply, "evt") == "ERROR")
             {
                 var data = reply["data"] as Dictionary<string, object>;
-                Log.Write("Discord did not take the status: " + (data == null ? "" : Value(data, "message")));
+                var message = data == null ? "" : Value(data, "message");
+                Log.Write("Discord did not take the status: " + message);
+                return message;
             }
+            return null;
         }
 
         public void Dispose()

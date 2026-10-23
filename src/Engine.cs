@@ -194,7 +194,13 @@ namespace Nowcast
                     // Looked again and still none: nothing new to send.
                     if (coverCame && !hasCover && key == sentKey && playing == sentPlaying && !jumped && !isResend) return;
                     sentCover = hasCover;
-                    discord.SetActivity(activity);
+                    if (discord.SetActivity(activity) != null && Activity.UseLinks)
+                    {
+                        // An older Discord may not know the links on the cover and title.
+                        Activity.UseLinks = false;
+                        activity = Activity.Build(track, start, settings);
+                        discord.SetActivity(activity);
+                    }
                     Log.Write("Status: " + Describe(track) + (activity.ContainsKey("assets") ? "" : " (no cover)"));
                 }
                 shownKey = track == null ? null : key;

@@ -7,6 +7,10 @@ namespace Nowcast
     // "Watching …" (type 3) for video services.
     static class Activity
     {
+        // Links on the cover and the title line. Turned off for the rest of the
+        // run when this Discord turns down a status that has them.
+        public static bool UseLinks = true;
+
         public static Dictionary<string, object> Build(Track track, long? startedAt, Settings settings)
         {
             var source = track.Source.Name;
@@ -54,7 +58,15 @@ namespace Nowcast
                 };
             }
 
-            if (settings.Buttons) activity["buttons"] = new[] { Button(track) };
+            var button = Button(track);
+            if (settings.Buttons) activity["buttons"] = new[] { button };
+            // A click on the cover or the title opens the same page as the button.
+            var url = (string)button["url"];
+            if (UseLinks && url.Length <= 256)
+            {
+                activity["details_url"] = url;
+                if (assets.ContainsKey("large_image")) assets["large_url"] = url;
+            }
             return activity;
         }
 
