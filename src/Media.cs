@@ -146,6 +146,19 @@ namespace Nowcast
                     title = match.Groups[2].Value;
                 }
             }
+            // "Artist - Topic" and "ArtistVEVO" channels post music, not videos:
+            // "Listening to YouTube" for them, and the cover from iTunes.
+            var isMusic = Regex.IsMatch(artist, @"\s*-\s*Topic$", RegexOptions.IgnoreCase) || Regex.IsMatch(artist, "VEVO$");
+            if (isMusic && track.Source.IsVideo && track.Source.Name == "YouTube")
+            {
+                track.Source = new SourceInfo
+                {
+                    Name = track.Source.Name,
+                    Search = track.Source.Search,
+                    ClientId = track.Source.ClientId,
+                    IsBrowser = track.Source.IsBrowser,
+                };
+            }
             artist = Regex.Replace(artist, @"\s*-\s*Topic$", "", RegexOptions.IgnoreCase);
             artist = Regex.Replace(artist, "VEVO$", "");
             track.Artist = artist.Trim();

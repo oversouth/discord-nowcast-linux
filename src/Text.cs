@@ -44,6 +44,7 @@ namespace Nowcast
         public static readonly string InListTitle = T("Название трека", "The track title");
         public static readonly string InListApp = T("Название приложения Discord", "The Discord application's name");
         public static readonly string CoversOption = T("Обложка трека", "Cover art");
+        public static readonly string CoverSearchOption = T("Искать обложку альбома в iTunes", "Look up the album art in iTunes");
         public static readonly string ButtonsOption = T("Кнопка «Слушать на …»", "\"Listen on …\" button");
         public static readonly string ShowPausedOption = T("Не убирать статус на паузе", "Keep the status on pause");
         public static readonly string SourcesNote = T("Приложения, которые сейчас играют. Снимите галочку, чтобы не показывать его в статусе.", "Apps playing now. Clear a box to keep that app out of the status.");

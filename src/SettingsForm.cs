@@ -25,6 +25,7 @@ namespace Nowcast
             Width = 320,
         };
         readonly Theme.CheckBox covers = new Theme.CheckBox { Text = Strings.CoversOption };
+        readonly Theme.CheckBox coverSearch = new Theme.CheckBox { Text = Strings.CoverSearchOption, Margin = new Padding(20, 3, 3, 3) };
         readonly Theme.CheckBox buttons = new Theme.CheckBox { Text = Strings.ButtonsOption };
         readonly Theme.CheckBox showPaused = new Theme.CheckBox { Text = Strings.ShowPausedOption };
         // A checkbox per source, in a scrolling box.
@@ -66,6 +67,7 @@ namespace Nowcast
             layout.Controls.Add(Note(Strings.InListLabel));
             layout.Controls.Add(inList);
             layout.Controls.Add(covers);
+            layout.Controls.Add(coverSearch);
             layout.Controls.Add(buttons);
             layout.Controls.Add(showPaused);
             layout.Controls.Add(Heading(Strings.Sources));
@@ -111,7 +113,12 @@ namespace Nowcast
             Fill();
 
             inList.SelectedIndexChanged += delegate { Change(s => s.InList = inListValues[inList.SelectedIndex]); };
-            covers.CheckedChanged += delegate { Change(s => s.Covers = covers.Checked); };
+            covers.CheckedChanged += delegate
+            {
+                coverSearch.Enabled = covers.Checked;
+                Change(s => s.Covers = covers.Checked);
+            };
+            coverSearch.CheckedChanged += delegate { Change(s => s.CoverSearch = coverSearch.Checked); };
             buttons.CheckedChanged += delegate { Change(s => s.Buttons = buttons.Checked); };
             showPaused.CheckedChanged += delegate { Change(s => s.ShowPaused = showPaused.Checked); };
             checkUpdates.CheckedChanged += delegate { Change(s => s.CheckUpdates = checkUpdates.Checked); };
@@ -131,6 +138,9 @@ namespace Nowcast
             var index = Array.IndexOf(inListValues, settings.InList);
             inList.SelectedIndex = index >= 0 ? index : 0;
             covers.Checked = settings.Covers;
+            coverSearch.Checked = settings.CoverSearch;
+            // Without covers there is nothing to look up.
+            coverSearch.Enabled = settings.Covers;
             buttons.Checked = settings.Buttons;
             showPaused.Checked = settings.ShowPaused;
             checkUpdates.Checked = settings.CheckUpdates;
