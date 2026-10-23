@@ -61,6 +61,7 @@ namespace Nowcast
         public static readonly string Exit = T("Выход", "Exit");
 
         public static readonly string ListenOn = T("Слушать на {0}", "Listen on {0}");
+        public static readonly string WatchOn = T("Смотреть на {0}", "Watch on {0}");
         public static readonly string FindOnYouTube = T("Найти на YouTube", "Find on YouTube");
     }
 }

@@ -75,6 +75,7 @@ namespace Nowcast
                         IsCurrent = app == currentApp,
                         Thumbnail = WinRT.Get(properties, propertiesType, "Thumbnail"),
                     };
+                    if (track.Source.IsBrowser) track.Source = Site(app, artist, title) ?? track.Source;
                     ReadTimeline(session, track);
                     Repair(track);
                     list.Add(track);
@@ -85,6 +86,24 @@ namespace Nowcast
                 }
             }
             return list;
+        }
+
+        // The site found for a track in a browser, kept for as long as it plays:
+        // its tab need not stay in front, and the status does not flip back.
+        static readonly Dictionary<string, SourceInfo> sites = new Dictionary<string, SourceInfo>();
+
+        static SourceInfo Site(string app, string artist, string title)
+        {
+            var key = app + "|" + artist + "|" + title;
+            SourceInfo site;
+            if (sites.TryGetValue(key, out site)) return site;
+            site = Sources.FromWindows(title, artist);
+            if (site != null)
+            {
+                if (sites.Count > 100) sites.Clear();
+                sites[key] = site;
+            }
+            return site;
         }
 
         static void ReadTimeline(object session, Track track)

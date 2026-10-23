@@ -1,9 +1,6 @@
 using System;
-using System.Diagnostics;
 using System.IO;
-using System.Management;
 using System.Reflection;
-using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using Microsoft.Win32;
 
@@ -110,37 +107,6 @@ namespace Nowcast
             catch (Exception e)
             {
                 Log.Write("Desktop shortcut not made: " + e.Message);
-            }
-        }
-
-        static readonly Regex oldScript = new Regex(@"-File\s+(""[^""]*\\|\S*\\|\.\\)?nowcast\.ps1""?(\s|$)", RegexOptions.IgnoreCase);
-
-        // 1.0.x was a PowerShell script started by a Startup folder shortcut:
-        // remove the shortcut and stop the script, so the two never fight.
-        public static void RemoveOldVersion()
-        {
-            try
-            {
-                var shortcut = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Startup), "discord-nowcast.lnk");
-                if (File.Exists(shortcut)) File.Delete(shortcut);
-
-                var query = "SELECT ProcessId, CommandLine FROM Win32_Process WHERE Name = 'powershell.exe'";
-                using (var searcher = new ManagementObjectSearcher(query))
-                {
-                    foreach (ManagementObject process in searcher.Get())
-                    {
-                        var line = process["CommandLine"] as string ?? "";
-                        // Only the script itself: -File, then a path ending in nowcast.ps1.
-                        if (oldScript.IsMatch(line))
-                        {
-                            Process.GetProcessById(Convert.ToInt32(process["ProcessId"])).Kill();
-                        }
-                    }
-                }
-            }
-            catch (Exception)
-            {
-                // Nothing to clean up, or no rights to; neither stops the start.
             }
         }
     }

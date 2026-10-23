@@ -3,14 +3,15 @@ using System.Collections.Generic;
 
 namespace Nowcast
 {
-    // The Discord activity for a track: "Listening to …" (type 2).
+    // The Discord activity for a track: "Listening to …" (type 2), or
+    // "Watching …" (type 3) for video services.
     static class Activity
     {
         public static Dictionary<string, object> Build(Track track, long? startedAt, Settings settings)
         {
             var source = track.Source.Name;
             var artist = track.Artist != "" ? track.Artist : source;
-            var activity = new Dictionary<string, object> { { "type", 2 }, { "instance", false } };
+            var activity = new Dictionary<string, object> { { "type", track.Source.IsVideo ? 3 : 2 }, { "instance", false } };
 
             // What the member list shows after "Listening to": status_display_type
             // 0 is the application name, 1 the state line, 2 the details line.
@@ -66,11 +67,14 @@ namespace Nowcast
 
         // "Listen on SoundCloud": a search for the track in the same service,
         // since players do not tell Windows the track's link. YouTube otherwise.
+        // On Twitch the artist is the channel and the title the stream's, so
+        // the search is for the channel.
         static Dictionary<string, object> Button(Track track)
         {
-            var query = Uri.EscapeDataString((track.Artist + " " + track.Title).Trim());
+            var words = track.Source.Name == "Twitch" && track.Artist != "" ? track.Artist : track.Artist + " " + track.Title;
+            var query = Uri.EscapeDataString(words.Trim());
             var hasOwn = track.Source.Search != null;
-            var label = hasOwn ? string.Format(Text.ListenOn, track.Source.Name) : Text.FindOnYouTube;
+            var label = hasOwn ? string.Format(track.Source.IsVideo ? Text.WatchOn : Text.ListenOn, track.Source.Name) : Text.FindOnYouTube;
             var url = (hasOwn ? track.Source.Search : "https://www.youtube.com/results?search_query=") + query;
             return new Dictionary<string, object> { { "label", Limit(label, 32) }, { "url", url } };
         }

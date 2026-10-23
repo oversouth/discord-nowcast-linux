@@ -30,6 +30,8 @@ namespace Nowcast
         public TrayApp(bool isUpdate)
         {
             ui.CreateControl();
+            // Dark, like Discord: the menu and every submenu.
+            ToolStripManager.Renderer = new Theme.MenuRenderer();
 
             hideItem.Click += delegate
             {

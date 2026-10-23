@@ -1,58 +1,53 @@
-# Changelog
+# Изменения
+
+## 1.3.0
+
+- **«Слушает SoundCloud» вместо общего названия.** У Яндекс Музыки, Spotify, SoundCloud, YouTube Music, VK Музыки, Apple Music и Telegram теперь своё приложение Discord, поэтому после «Слушает» стоит название сервиса. Остальные плееры идут через общее приложение, как раньше.
+- **«Смотрит YouTube» и «Смотрит Twitch».** Видео показывается как просмотр, а кнопка в статусе называется «Смотреть на YouTube». На Twitch кнопка ищет канал.
+- **Сайт во вкладке браузера.** YouTube, Twitch, SoundCloud и другие сайты в обычной вкладке узнаются по заголовку окна, так что в статусе будет YouTube, а не Chrome. Срабатывает, когда вкладка с треком открыта в окне.
+- **Тёмное оформление** в цветах Discord: меню у часов и окно настроек.
+- **Меньше ложных срабатываний антивирусов.** У exe появилась информация о версии и авторе, а из кода убрано удаление версии 1.0.x, которое искало и останавливало процессы PowerShell. В README добавлено, что делать, если Защитник Windows всё равно блокирует файл.
+- README и список изменений теперь в первую очередь на русском, английский README — в [README.en.md](README.en.md).
 
 ## 1.2.0
 
-- **Settings window** from the tray menu: what the member list shows, cover art, the "Listen on …" button, keeping the status on pause, sources, starting with Windows, update checks. Changes apply at once.
-- **Choose the sources.** *Sources in the status* in the tray menu and the settings window has a checkbox per app playing now: clear one to keep, say, YouTube in the browser out of the status.
-- **Discord started after the music** now picks up the status within seconds. Before, a Discord that was closed and opened again went unnoticed until the track changed. The status is also sent once more ten seconds after connecting, since a Discord still starting up can drop the first one.
-- **Every new install** — the exe downloaded again or moved — starts with Windows and gets a desktop shortcut, even when settings from an earlier install are still there. Autostart turned off or a shortcut deleted stay that way afterwards.
-- A click on a line in *What Windows sees* copies the app's ID, for reporting a player that is not recognized.
-
-Окно настроек, выбор источников галочками, статус подхватывается после запуска Discord, автозагрузка и ярлык при каждой новой установке.
+- **Окно настроек** из меню у часов: что видно в списке участников, обложка, кнопка «Слушать на …», статус на паузе, источники, автозапуск, проверка обновлений. Изменения применяются сразу.
+- **Выбор источников.** В пункте «Источники в статусе» в меню и в окне настроек есть галочка на каждое играющее приложение: снимите её, чтобы, например, YouTube из браузера не попадал в статус.
+- **Discord, запущенный после музыки,** теперь подхватывает статус за несколько секунд. Раньше закрытый и снова открытый Discord оставался без статуса, пока не сменится трек. Кроме того, через десять секунд после подключения статус отправляется ещё раз: Discord, который ещё запускается, может потерять первый.
+- **Каждая новая установка** (exe скачан заново или перенесён) запускается вместе с Windows и получает ярлык на рабочем столе, даже если остались настройки от прошлой. Если потом выключить автозапуск или удалить ярлык, так и останется.
+- Нажатие на строку в «Что видит Windows» копирует ID приложения: он нужен, чтобы сообщить о нераспознанном плеере.
 
 ## 1.1.1
 
-- **Desktop shortcut.** The first start puts a discord-nowcast shortcut on the desktop, next to adding itself to startup. Delete it and it stays deleted; move the exe and the shortcut follows.
-- The source logo in the corner of the cover is gone: Discord showed a question mark instead of it. The `sourceIcons` setting goes with it.
-
-Ярлык на рабочем столе при первом запуске; логотип источника в углу обложки убран.
+- **Ярлык на рабочем столе.** При первом запуске программа кладёт ярлык на рабочий стол и добавляет себя в автозагрузку. Удалите ярлык, и он не вернётся; перенесите exe, и ярлык будет указывать на новое место.
+- Логотип источника в углу обложки убран: Discord показывал вместо него знак вопроса. Вместе с ним ушла настройка `sourceIcons`.
 
 ## 1.1.0
 
-- **One exe instead of scripts.** discord-nowcast is now a single small `discord-nowcast.exe` with a raven icon: download, run, done. It starts with Windows by itself. The PowerShell 1.0.x is stopped and removed from startup on the first run.
-- **Tray icon.** A raven by the clock: the current track on hover, and a menu to hide the status for an hour, see what Windows reports, turn starting with Windows on or off, open the settings and the log, check for updates, exit.
-- **Source logo on the cover.** Yandex Music, Spotify, SoundCloud, Telegram, YouTube, VK, Apple Music and browsers get their logo in the corner of the cover. Off with `"sourceIcons": false`.
-- **"Listen on …" button** in the status: a search for the track in the same service, YouTube for Telegram and browsers. Off with `"buttons": false`.
-- **Updates.** Checks GitHub every six hours and updates itself in place on a click. Off with `"checkUpdates": false`.
-- Settings moved to `%APPDATA%\discord-nowcast\config.json` and apply as soon as the file is saved. The interface is in Russian on a Russian Windows and in English elsewhere.
-
-Один .exe вместо скриптов, значок у часов с меню, логотип источника на обложке, кнопка «Слушать на …» и обновление в один клик.
+- **Один exe вместо скриптов.** discord-nowcast теперь один небольшой `discord-nowcast.exe` со значком ворона: скачали, запустили, готово. Сам добавляет себя в автозагрузку. PowerShell-версия 1.0.x при первом запуске останавливается и убирается из автозагрузки.
+- **Значок у часов.** Ворон у часов: при наведении текущий трек, в меню можно скрыть статус на час, посмотреть, что видит Windows, включить или выключить автозапуск, открыть настройки и лог, проверить обновления, выйти.
+- **Логотип источника на обложке.** Яндекс Музыка, Spotify, SoundCloud, Telegram, YouTube, VK, Apple Music и браузеры получают свой логотип в углу обложки. Отключается `"sourceIcons": false`.
+- **Кнопка «Слушать на …»** в статусе: поиск трека в том же сервисе, для Telegram и браузеров — на YouTube. Отключается `"buttons": false`.
+- **Обновления.** Раз в шесть часов программа проверяет GitHub и обновляется на месте по одному нажатию. Отключается `"checkUpdates": false`.
+- Настройки переехали в `%APPDATA%\discord-nowcast\config.json` и применяются сразу после сохранения файла. Интерфейс на русском на русской Windows и на английском на остальных.
 
 ## 1.0.2
 
-- Track length is no longer looked up on Deezer for players that do not report it: the bar went wrong after seeking, which discord-nowcast cannot see. Such players (Telegram) show elapsed time again, and nothing goes to Deezer.
-
-Длина трека больше не ищется в Deezer: после перемотки полоска врала. У Telegram снова показывается прошедшее время.
+- Длина трека больше не ищется в Deezer для плееров, которые её не сообщают: после перемотки полоска врала, а discord-nowcast перемотку не видит. У таких плееров (Telegram) снова показывается прошедшее время, и в Deezer ничего не уходит.
 
 ## 1.0.1
 
-- **Progress bar for Telegram** and other players that report no track length: the length is looked up on Deezer and the time is counted by discord-nowcast itself. Turn off with `"lengths": false`.
-- The source is no longer shown twice in the card ("Telegram / Telegram") when the track has no album.
-
-Полоска времени и для Telegram (длина трека ищется в Deezer), источник больше не повторяется дважды.
+- **Полоска времени для Telegram** и других плееров, которые не сообщают длину трека: длина ищется в Deezer, а время считает сам discord-nowcast. Отключается `"lengths": false`.
+- Источник больше не показывается в карточке дважды («Telegram / Telegram»), когда у трека нет альбома.
 
 ## 1.0.0
 
-The first release.
+Первый релиз.
 
-- **Listening to … in Discord** for whatever plays on Windows: Yandex Music, Spotify, SoundCloud, VK, Telegram, browsers, AIMP, local files. Artist, title, where it plays, and a progress bar when the app reports the track length.
-- **Cover art** straight from the player, the same picture it shows. Without one, the application icon.
-- **Source names** for common apps, and the Start menu name for sites installed as apps, so SoundCloud reads as SoundCloud, not Chrome.
-- **When several things play**, a track with a known length wins over a video feed in the browser.
-- **Install in one click**: `install.cmd` starts it with no window and adds it to startup; `uninstall.cmd` removes it.
-- **Settings** in `config.json`: what the member list shows, keeping the status on pause, hidden apps, your own source names.
-- Clears the status on pause and when nothing plays; reconnects when Discord restarts.
-
----
-
-Первый релиз: «Слушает …» в Discord для всего, что играет в Windows, обложка из плеера, установка в один клик. Подробности — в [README.ru.md](README.ru.md).
+- **«Слушает …» в Discord** для всего, что играет в Windows: Яндекс Музыка, Spotify, SoundCloud, VK, Telegram, браузеры, AIMP, локальные файлы. Исполнитель, название, откуда играет и полоска времени, если приложение сообщает длину трека.
+- **Обложка** прямо из плеера, та же картинка, что в нём. Без неё — иконка приложения.
+- **Названия источников** для популярных приложений и имя из меню «Пуск» для сайтов, установленных как приложения, так что SoundCloud так и называется, а не Chrome.
+- **Когда играет несколько вещей,** трек с известной длиной побеждает видео в браузере.
+- **Установка в один клик:** `install.cmd` запускает без окна и добавляет в автозагрузку, `uninstall.cmd` удаляет.
+- **Настройки** в `config.json`: что видно в списке участников, статус на паузе, скрытые приложения, свои названия источников.
+- Статус убирается на паузе и когда ничего не играет; после перезапуска Discord переподключается.

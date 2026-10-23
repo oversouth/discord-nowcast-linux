@@ -10,7 +10,7 @@ $csc = Join-Path $framework 'csc.exe'
 
 $references = @(
     'System.dll', 'System.Core.dll', 'System.Drawing.dll', 'System.Windows.Forms.dll',
-    'System.Management.dll', 'System.Net.Http.dll', 'System.Web.Extensions.dll',
+    'System.Net.Http.dll', 'System.Web.Extensions.dll',
     'System.Runtime.dll', 'System.Runtime.WindowsRuntime.dll'
 ) | ForEach-Object { '-r:' + (Join-Path $framework $_) }
 

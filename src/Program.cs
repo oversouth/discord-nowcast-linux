@@ -16,7 +16,7 @@ namespace Nowcast
     static class Program
     {
         // Raise with every release, together with a CHANGELOG.md entry.
-        public const string Version = "1.2.0";
+        public const string Version = "1.3.0";
         public const string Repo = "playsin333/discord-nowcast";
 
         [STAThread]
@@ -28,8 +28,6 @@ namespace Nowcast
 
             bool isUpdate = args.Contains("--updated");
             Updater.CleanUp();
-            // The PowerShell 1.0.x held the same name; stop it before taking it.
-            Startup.RemoveOldVersion();
 
             // One copy at a time. After an update the old copy is still closing,
             // so wait for it; a copy that was killed leaves the mutex abandoned,

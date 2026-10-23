@@ -125,15 +125,29 @@ namespace Nowcast
                 Log.Write("Settings reloaded");
             }
 
+            var sessions = Media.Read(settings);
+            var isHidden = DateTime.Now < HiddenUntil;
+            var track = isHidden ? null : Pick(sessions);
+            Sessions = sessions;
+
             if (discord.IsConnected && !discord.IsAlive)
             {
                 Log.Write("Discord closed the connection");
                 discord.Dispose();
                 nextConnect = DateTime.Now;
             }
+            // Each service has its own application, named after it: another
+            // service means another connection. Closing one clears its status.
+            var clientId = track != null ? settings.ClientIdFor(track.Source) : (discord.ClientId ?? settings.ClientId);
+            if (discord.IsConnected && discord.ClientId != clientId)
+            {
+                Log.Write("Switching to the Discord application of " + track.Source.Name);
+                discord.Dispose();
+                nextConnect = DateTime.Now;
+            }
             if (!discord.IsConnected && DateTime.Now >= nextConnect)
             {
-                if (discord.Connect(settings.ClientId))
+                if (discord.Connect(clientId))
                 {
                     sentKey = null;
                     // A Discord that is still starting up can drop the first
@@ -146,10 +160,6 @@ namespace Nowcast
                 }
             }
 
-            var sessions = Media.Read(settings);
-            var isHidden = DateTime.Now < HiddenUntil;
-            var track = isHidden ? null : Pick(sessions);
-            Sessions = sessions;
             Report(!discord.IsConnected ? Text.DiscordOff
                 : isHidden ? string.Format(Text.HiddenUntil, HiddenUntil)
                 : track == null ? Text.NothingPlaying

@@ -13,7 +13,10 @@ namespace Nowcast
     {
         public static readonly string FilePath = Path.Combine(Log.Folder, "config.json");
 
-        public string ClientId = "1562901782579912804";
+        // The general Discord application, for players without one of their own.
+        public const string DefaultClientId = "1562901782579912804";
+
+        public string ClientId = DefaultClientId;
         // What the member list shows after "Listening to": source, artist, title, app.
         public string InList = "source";
         public bool ShowPaused = false;
@@ -64,6 +67,14 @@ namespace Nowcast
             };
             Directory.CreateDirectory(Log.Folder);
             File.WriteAllText(FilePath, "{\r\n" + string.Join(",\r\n", lines) + "\r\n}\r\n", new UTF8Encoding(false));
+        }
+
+        // The application a source goes out under: its own one ("Listening to
+        // SoundCloud"), unless clientId names an application of your own.
+        public string ClientIdFor(SourceInfo source)
+        {
+            if (ClientId != DefaultClientId || source.ClientId == null) return ClientId;
+            return source.ClientId;
         }
 
         // Whether a word in "hide" matches the app: by its ID or by the name shown.

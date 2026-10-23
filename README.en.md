@@ -1,0 +1,119 @@
+<div align="center">
+
+<img src="assets/icon.png" alt="" width="96">
+
+# discord-nowcast
+
+**Show the track from any app in your Discord status.**
+
+Yandex Music, Spotify, SoundCloud, VK, Telegram, YouTube in a browser, AIMP, local files: anything that plays on Windows.
+
+[![release](https://img.shields.io/github/v/release/playsin333/discord-nowcast?color=5865f2)](https://github.com/playsin333/discord-nowcast/releases/latest)
+[![downloads](https://img.shields.io/github/downloads/playsin333/discord-nowcast/total?color=3d3c38)](https://github.com/playsin333/discord-nowcast/releases)
+![platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-3d3c38)
+[![license](https://img.shields.io/badge/license-MIT-3d3c38)](LICENSE)
+
+[Русский](README.md) · **English**
+
+**[⬇ Download discord-nowcast.exe](https://github.com/playsin333/discord-nowcast/releases/latest/download/discord-nowcast.exe)** · [Discussions](https://github.com/playsin333/discord-nowcast/discussions) · [Report a bug](https://github.com/playsin333/discord-nowcast/issues/new?template=bug.yml)
+
+</div>
+
+## What you get
+
+Your profile and the server member list show **Listening to SoundCloud**, **Listening to Yandex Music**, and for video **Watching YouTube** or **Watching Twitch**:
+
+- the artist and the track title (on Twitch, the channel and the stream title);
+- where it plays: Yandex Music, Telegram, SoundCloud, Chrome;
+- the cover art, the same picture the player shows;
+- a progress bar, when the app reports the track length;
+- a **Listen on SoundCloud** button (or Yandex Music, Spotify…) that opens the track for whoever clicks it.
+
+When the music is paused or stops, the status clears itself.
+
+## Install
+
+1. **[Download `discord-nowcast.exe`](https://github.com/playsin333/discord-nowcast/releases/latest/download/discord-nowcast.exe)** and put it in a folder you will keep, for example `Documents\discord-nowcast`.
+2. **Run it.** A raven appears by the clock, a shortcut appears on the desktop, and from now on it starts with Windows. Downloaded it again, or moved it? The same happens for the new copy.
+
+That's all: one small file, nothing else to install. It needs Windows 10 or 11 and the Discord desktop app (not the website), with **Settings → Activity Privacy → Share your detected activities with others** turned on.
+
+If Windows says *"Windows protected your PC"*, click **More info → Run anyway**: the file comes from the internet and is not signed.
+
+### My antivirus says it is a virus
+
+It is a false positive. The file has no digital signature, adds itself to startup and updates itself from GitHub; to antivirus heuristics that mix looks suspicious, though the program does nothing harmful, and all of its code is open in `src`. If Windows Defender says *"Operation did not complete successfully because the file contains a virus or potentially unwanted software"*:
+
+1. Open **Windows Security → Virus & threat protection → Protection history**, find discord-nowcast and choose **Actions → Allow on device**.
+2. Download the exe again and save it to a regular folder. Do not run it straight from the browser or Telegram: that puts it in a temporary folder, which Defender checks harder.
+3. If it is still blocked, add the program's folder to the exclusions: **Virus & threat protection → Manage settings → Exclusions → Add an exclusion → Folder**.
+
+Every new version is sent to Microsoft as a false positive; Defender usually stops flagging it within a few days.
+
+## The tray icon
+
+The raven by the clock, at the bottom right of the screen, is how you control it. Only you see it; nobody in Discord does. Hover for the current track, click for the menu:
+
+| Item | What it does |
+| --- | --- |
+| Hide status for an hour | clears the status for an hour; click again to bring it back |
+| Sources in the status | a checkbox per app playing now; clear one to keep, say, YouTube in the browser out of the status |
+| What Windows sees | every app reporting a track right now, playing or paused; a click copies its app ID |
+| Start with Windows | on by default |
+| Settings… | the settings window: what the member list shows, cover, button, pause, sources, autostart, updates. Changes apply at once |
+| Open log | what was sent to Discord and any errors |
+| Check for updates | downloads the new version and restarts; it also checks by itself every six hours |
+| Exit | stops it and clears the status |
+
+## Settings
+
+Most of these are in the settings window. All of them live in `config.json` in `%APPDATA%\discord-nowcast`, which opens from the window under *Advanced*.
+
+| Setting | What it means |
+| --- | --- |
+| `clientId` | the Discord application whose name follows "Listening to". Yandex Music, Spotify, SoundCloud, YouTube, YouTube Music, Twitch, VK Music, Apple Music and Telegram have their own; other players share a general one. To always use your own name, create an app at [discord.com/developers/applications](https://discord.com/developers/applications) (**New Application**) and paste its **Application ID** here |
+| `inList` | what the member list shows after "Listening to": `source` where it plays (default), `artist`, `title`, or `app` for the application name |
+| `showPaused` | `true` keeps the status on pause, marked as paused |
+| `covers` | `false` turns cover art off |
+| `buttons` | `false` removes the "Listen on …" button |
+| `checkUpdates` | `false` stops the automatic update check |
+| `image` | a picture URL to show when the player gives no cover |
+| `hide` | apps never to show: `["chrome", "Telegram"]` |
+| `names` | your own source names: `{"chrome": "YouTube"}` |
+
+## How it works
+
+Windows already knows what is playing: it is the track card that pops up when you press the volume keys. discord-nowcast reads those system media sessions once a second and, when something changes, sends the status to Discord over its local IPC pipe, the same one games use.
+
+- **Source name.** Taken from the app's ID. A site installed as an app (SoundCloud or YouTube Music via *Install* in Chrome or Edge) is named as in the Start menu. In a regular browser tab the site is told by the window title: the window whose title holds the track is searched for YouTube, Twitch, SoundCloud and the rest. So the status says SoundCloud, not Chrome.
+- **"Listening to SoundCloud".** Discord puts the name of the application that sent the status after "Listening to". So each service has a Discord application of its own, and discord-nowcast reconnects to the right one when the source changes. YouTube and Twitch go out as "Watching".
+- **Cover art.** The picture the player hands to Windows along with the track. Discord only shows pictures by URL, so it is uploaded to the temporary host [litterbox.catbox.moe](https://litterbox.catbox.moe) for three days. If the player gives no picture, Discord shows the application icon.
+- **The button.** Players do not tell Windows the track's link, so "Listen on …" opens a search for the track in the same service; for Telegram and browsers, a YouTube search. Discord does not let you click your own buttons, only other people's.
+- **Rate limit.** Discord accepts at most five updates per 20 seconds, so the status changes at most once every four seconds.
+
+## Limitations
+
+- The app has to tell Windows what it plays. Almost every app does; if it is missing under *What Windows sees*, discord-nowcast cannot see it either.
+- The site in a browser tab is told by the window title, and Windows only shows the title of the tab in front. A track that started in a background tab shows up as the browser, Chrome for instance: switch to the music's tab, install the site as an app, or name it yourself in `names`.
+- The progress bar needs the app to report the track length. Yandex Music, Spotify and most sites do; Telegram does not, so it shows elapsed time.
+
+## Privacy
+
+The artist and title go only to Discord: that is the status itself. The cover picture from the player is uploaded to litterbox.catbox.moe; `"covers": false` turns that off. The update check asks GitHub for the latest release. Nothing else is sent anywhere.
+
+## Building it yourself
+
+```
+powershell -ExecutionPolicy Bypass -File build.ps1
+```
+
+It uses the C# compiler that ships with .NET Framework 4.8 on every Windows 10 and 11, so there is nothing to install. The code is in `src`.
+
+## Questions, bugs, ideas
+
+- [Discussions](https://github.com/playsin333/discord-nowcast/discussions): questions, ideas, show your setup.
+- [Report a bug](https://github.com/playsin333/discord-nowcast/issues/new?template=bug.yml): a screenshot of *What Windows sees* and the log help the most.
+
+Changes are listed in [CHANGELOG.md](CHANGELOG.md).
+
+License: [MIT](LICENSE).

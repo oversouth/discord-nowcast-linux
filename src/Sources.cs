@@ -12,6 +12,13 @@ namespace Nowcast
         public string Name;
         // Search page the status button opens, the query appended; null: YouTube.
         public string Search;
+        // The Discord application named after the service, so the status reads
+        // "Listening to SoundCloud"; null: the general one from the settings.
+        public string ClientId;
+        // "Watching" (type 3) instead of "Listening to": YouTube, Twitch.
+        public bool IsVideo;
+        // A browser: the site may be found by the window title.
+        public bool IsBrowser;
     }
 
     // Which app a session comes from, by its app ID.
@@ -22,38 +29,49 @@ namespace Nowcast
             public Regex Pattern;
             public string Name;
             public string Search;
+            public string ClientId;
+            public bool IsVideo;
+            public bool IsBrowser;
 
-            public Rule(string pattern, string name, string search)
+            public Rule(string pattern, string name, string search, string clientId = null, bool isVideo = false)
             {
                 Pattern = new Regex(pattern, RegexOptions.IgnoreCase);
                 Name = name;
                 Search = search;
+                ClientId = clientId;
+                IsVideo = isVideo;
             }
+        }
+
+        static Rule Browser(string pattern, string name)
+        {
+            return new Rule(pattern, name, null) { IsBrowser = true };
         }
 
         // Order matters: Yandex Music before Yandex Browser, YouTube Music before YouTube.
         static readonly Rule[] rules =
         {
-            new Rule(@"yandex.*music|music.*yandex|яндекс.?музык", Text.Ru ? "Яндекс Музыка" : "Yandex Music", "https://music.yandex.ru/search?text="),
-            new Rule(@"spotify", "Spotify", "https://open.spotify.com/search/"),
-            new Rule(@"soundcloud", "SoundCloud", "https://soundcloud.com/search?q="),
-            new Rule(@"youtube.?music", "YouTube Music", "https://music.youtube.com/search?q="),
-            new Rule(@"youtube", "YouTube", "https://www.youtube.com/results?search_query="),
-            new Rule(@"telegram", "Telegram", null),
-            new Rule(@"vk.?music|vk музык|vkontakte|\bvk\b", Text.Ru ? "VK Музыка" : "VK Music", "https://vk.com/audio?q="),
-            new Rule(@"applemusic|apple music|itunes", "Apple Music", "https://music.apple.com/search?term="),
+            new Rule(@"yandex.*music|music.*yandex|яндекс.?музык", Text.Ru ? "Яндекс Музыка" : "Yandex Music", "https://music.yandex.ru/search?text=", "1563159088265822392"),
+            new Rule(@"spotify", "Spotify", "https://open.spotify.com/search/", "1563159215709749389"),
+            new Rule(@"soundcloud", "SoundCloud", "https://soundcloud.com/search?q=", "1563159356940361779"),
+            new Rule(@"youtube.?music", "YouTube Music", "https://music.youtube.com/search?q=", "1563162689163886642"),
+            new Rule(@"youtube", "YouTube", "https://www.youtube.com/results?search_query=", "1563159477673263216", true),
+            new Rule(@"twitch", "Twitch", "https://www.twitch.tv/search?term=", "1563159932218646588", true),
+            new Rule(@"telegram", "Telegram", null, "1563159812382920706"),
+            new Rule(@"vk.?music|vk музык|vkontakte|вконтакте|\bvk\b|\bвк\b", Text.Ru ? "VK Музыка" : "VK Music", "https://vk.com/audio?q=", "1563159553619525723"),
+            new Rule(@"applemusic|apple music|itunes", "Apple Music", "https://music.apple.com/search?term=", "1563159657676021881"),
             new Rule(@"zunemusic", Text.Ru ? "Медиаплеер Windows" : "Windows Media Player", null),
             new Rule(@"aimp", "AIMP", null),
             new Rule(@"foobar", "foobar2000", null),
             new Rule(@"vlc", "VLC", null),
             new Rule(@"musicbee", "MusicBee", null),
-            new Rule(@"yandex|^browser", Text.Ru ? "Яндекс Браузер" : "Yandex Browser", null),
-            new Rule(@"chrome", "Chrome", null),
-            new Rule(@"msedge|microsoftedge", "Edge", null),
-            new Rule(@"firefox|308046B0AF4A39CB", "Firefox", null),
-            new Rule(@"opera", "Opera", null),
-            new Rule(@"vivaldi", "Vivaldi", null),
-            new Rule(@"brave", "Brave", null),
+            Browser(@"yandex|^browser", Text.Ru ? "Яндекс Браузер" : "Yandex Browser"),
+            Browser(@"chrome", "Chrome"),
+            Browser(@"msedge|microsoftedge", "Edge"),
+            Browser(@"firefox|308046B0AF4A39CB", "Firefox"),
+            Browser(@"opera", "Opera"),
+            Browser(@"vivaldi", "Vivaldi"),
+            Browser(@"brave", "Brave"),
         };
 
         public static SourceInfo Resolve(string app, Settings settings)
@@ -71,11 +89,43 @@ namespace Nowcast
             // The button follows the name when it is known, the app ID otherwise.
             var rule = (name == null ? null : Match(name)) ?? Match(app);
             if (name == null) name = rule != null ? rule.Name : Fallback(app);
+            return Info(name, rule);
+        }
+
+        static SourceInfo Info(string name, Rule rule)
+        {
             return new SourceInfo
             {
                 Name = name,
                 Search = rule != null ? rule.Search : null,
+                ClientId = rule != null ? rule.ClientId : null,
+                IsVideo = rule != null && rule.IsVideo,
+                // Only when the name is ours: a name from "names" stays as given.
+                IsBrowser = rule != null && rule.IsBrowser && rule.Name == name,
             };
+        }
+
+        // A browser reports itself, not the site. The window shows the site in
+        // its title, "Video - YouTube - Google Chrome", but only for the tab in
+        // front, so this finds the window whose title holds the track and looks
+        // for a site in the rest of it: the track's own words could name one.
+        public static SourceInfo FromWindows(string title, string artist)
+        {
+            foreach (var window in WindowTitles.Read())
+            {
+                var rest = window;
+                var holds = false;
+                foreach (var part in new[] { title, artist })
+                {
+                    if (part.Length < 3 || rest.IndexOf(part, StringComparison.OrdinalIgnoreCase) < 0) continue;
+                    rest = Regex.Replace(rest, Regex.Escape(part), " ", RegexOptions.IgnoreCase);
+                    holds = true;
+                }
+                if (!holds) continue;
+                var rule = Match(rest);
+                if (rule != null && rule.ClientId != null) return Info(rule.Name, rule);
+            }
+            return null;
         }
 
         static Rule Match(string text)

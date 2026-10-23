@@ -28,6 +28,9 @@ namespace Nowcast
             get { return pipe != null; }
         }
 
+        // The application the connection speaks for.
+        public string ClientId { get; private set; }
+
         // False once Discord has closed its end: it quit or restarted. Without
         // this a restart goes unnoticed until the track changes, since only a
         // write would fail.
@@ -74,6 +77,7 @@ namespace Nowcast
                     if (Value(reply, "evt") == "READY")
                     {
                         pipe = candidate;
+                        ClientId = clientId;
                         var data = reply["data"] as Dictionary<string, object>;
                         var user = data == null ? null : data["user"] as Dictionary<string, object>;
                         Log.Write("Connected to Discord" + (user == null ? "" : " as " + Value(user, "username")));
@@ -121,6 +125,7 @@ namespace Nowcast
                 {
                 }
                 pipe = null;
+                ClientId = null;
             }
         }
 

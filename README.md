@@ -4,105 +4,116 @@
 
 # discord-nowcast
 
-**Show the track from any app in your Discord status.**
+**Трек из любого приложения в статусе Discord.**
 
-Yandex Music, Spotify, SoundCloud, VK, Telegram, YouTube in a browser, AIMP, local files: anything that plays on Windows.
+Яндекс Музыка, Spotify, SoundCloud, VK, Telegram, YouTube в браузере, AIMP, локальные файлы: всё, что играет в Windows.
 
 [![release](https://img.shields.io/github/v/release/playsin333/discord-nowcast?color=5865f2)](https://github.com/playsin333/discord-nowcast/releases/latest)
 [![downloads](https://img.shields.io/github/downloads/playsin333/discord-nowcast/total?color=3d3c38)](https://github.com/playsin333/discord-nowcast/releases)
 ![platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-3d3c38)
 [![license](https://img.shields.io/badge/license-MIT-3d3c38)](LICENSE)
 
-**English** · [Русский](README.ru.md)
+**Русский** · [English](README.en.md)
 
-**[⬇ Download discord-nowcast.exe](https://github.com/playsin333/discord-nowcast/releases/latest/download/discord-nowcast.exe)** · [Discussions](https://github.com/playsin333/discord-nowcast/discussions) · [Report a bug](https://github.com/playsin333/discord-nowcast/issues/new?template=bug.yml)
+**[⬇ Скачать discord-nowcast.exe](https://github.com/playsin333/discord-nowcast/releases/latest/download/discord-nowcast.exe)** · [Обсуждения](https://github.com/playsin333/discord-nowcast/discussions) · [Сообщить о баге](https://github.com/playsin333/discord-nowcast/issues/new?template=bug.yml)
 
 </div>
 
-## What you get
+## Что получится
 
-Your profile and the server member list show **Listening to …**, just like Spotify does:
+В профиле и в списке участников сервера появляется «Слушает SoundCloud», «Слушает Яндекс Музыка», а для видео «Смотрит YouTube» или «Смотрит Twitch»:
 
-- the artist and the track title;
-- where it plays: Yandex Music, Telegram, SoundCloud, Chrome;
-- the cover art, the same picture the player shows;
-- a progress bar, when the app reports the track length;
-- a **Listen on SoundCloud** button (or Yandex Music, Spotify…) that opens the track for whoever clicks it.
+- исполнитель и название трека (на Twitch — канал и название стрима);
+- откуда играет: Яндекс Музыка, Telegram, SoundCloud, Chrome;
+- обложка — та же картинка, что в самом плеере;
+- полоска времени трека, если приложение сообщает его длину;
+- кнопка **«Слушать на SoundCloud»** (или на Яндекс Музыке, Spotify…): кто нажмёт, тот откроет трек.
 
-When the music is paused or stops, the status clears itself.
+На паузе или когда ничего не играет, статус убирается сам.
 
-## Install
+## Установка
 
-1. **[Download `discord-nowcast.exe`](https://github.com/playsin333/discord-nowcast/releases/latest/download/discord-nowcast.exe)** and put it in a folder you will keep, for example `Documents\discord-nowcast`.
-2. **Run it.** A raven appears by the clock, a shortcut appears on the desktop, and from now on it starts with Windows. Downloaded it again, or moved it? The same happens for the new copy.
+1. **[Скачайте `discord-nowcast.exe`](https://github.com/playsin333/discord-nowcast/releases/latest/download/discord-nowcast.exe)** и положите в папку, которую не будете удалять, например `Документы\discord-nowcast`.
+2. **Запустите его.** У часов появится ворон, на рабочем столе — ярлык, и дальше программа будет стартовать вместе с Windows. Скачали заново или перенесли в другую папку — для новой копии всё сделается так же.
 
-That's all: one small file, nothing else to install. It needs Windows 10 or 11 and the Discord desktop app (not the website), with **Settings → Activity Privacy → Share your detected activities with others** turned on.
+Всё: один небольшой файл, больше ничего ставить не нужно. Нужны Windows 10 или 11 и Discord на компьютере (не сайт), а в **Настройки → Конфиденциальность активности** включено «Делиться обнаруженной активностью».
 
-If Windows says *"Windows protected your PC"*, click **More info → Run anyway**: the file comes from the internet and is not signed.
+Если Windows пишет «Система Windows защитила ваш компьютер», нажмите **Подробнее → Выполнить в любом случае**: файл скачан из интернета и не подписан.
 
-## The tray icon
+### Антивирус пишет, что это вирус
 
-The raven by the clock, at the bottom right of the screen, is how you control it. Only you see it; nobody in Discord does. Hover for the current track, click for the menu:
+Это ложное срабатывание. У файла нет цифровой подписи, а сам он ставит себя в автозагрузку и обновляется с GitHub. Для антивирусной эвристики такой набор выглядит подозрительно, хотя ничего вредного программа не делает: весь код открыт и лежит в папке `src`. Если Защитник Windows пишет «Операция не была успешно завершена, так как файл содержит вирус или потенциально нежелательную программу»:
 
-| Item | What it does |
+1. Откройте **Безопасность Windows → Защита от вирусов и угроз → Журнал защиты**, найдите там discord-nowcast и нажмите **Действия → Разрешить на устройстве**.
+2. Скачайте exe заново и сохраните в обычную папку. Не запускайте его прямо из браузера или Telegram: так файл попадает во временную папку, а её Защитник проверяет строже.
+3. Если всё равно блокирует, добавьте папку с программой в исключения: **Защита от вирусов и угроз → Управление настройками → Исключения → Добавить исключение → Папка**.
+
+Каждую новую версию мы отправляем в Microsoft как ложное срабатывание, обычно через несколько дней Защитник перестаёт на неё ругаться.
+
+## Значок у часов
+
+Ворон у часов, в правом нижнем углу экрана, — это управление программой. Его видите только вы, в Discord его не видно никому. Наведите мышку — увидите текущий трек; нажмите — откроется меню:
+
+| Пункт | Что делает |
 | --- | --- |
-| Hide status for an hour | clears the status for an hour; click again to bring it back |
-| Sources in the status | a checkbox per app playing now; clear one to keep, say, YouTube in the browser out of the status |
-| What Windows sees | every app reporting a track right now, playing or paused; a click copies its app ID |
-| Start with Windows | on by default |
-| Settings… | the settings window: what the member list shows, cover, button, pause, sources, autostart, updates. Changes apply at once |
-| Open log | what was sent to Discord and any errors |
-| Check for updates | downloads the new version and restarts; it also checks by itself every six hours |
-| Exit | stops it and clears the status |
+| Скрыть статус на час | убирает статус на час; нажмите ещё раз, чтобы вернуть |
+| Источники в статусе | галочка на каждое приложение, которое сейчас играет; снимите, чтобы, например, YouTube из браузера не попадал в статус |
+| Что видит Windows | все приложения, которые сейчас сообщают о треке, играющие и на паузе; нажатие копирует ID приложения |
+| Запускать вместе с Windows | включено по умолчанию |
+| Настройки… | окно настроек: что видно в списке участников, обложка, кнопка, пауза, источники, автозагрузка, обновления. Изменения применяются сразу |
+| Открыть лог | что уходило в Discord и какие были ошибки |
+| Проверить обновления | скачивает новую версию и перезапускается; раз в шесть часов программа проверяет и сама |
+| Выход | останавливает программу и убирает статус |
 
-## Settings
+## Настройки
 
-Most of these are in the settings window. All of them live in `config.json` in `%APPDATA%\discord-nowcast`, which opens from the window under *Advanced*.
+Большая часть есть в окне настроек. Все они лежат в `config.json` в `%APPDATA%\discord-nowcast`, который открывается из окна по ссылке «Дополнительно».
 
-| Setting | What it means |
+| Настройка | Что значит |
 | --- | --- |
-| `clientId` | the Discord application whose name follows "Listening to". The built-in one works out of the box; for your own name create an app at [discord.com/developers/applications](https://discord.com/developers/applications) (**New Application**) and paste its **Application ID** here |
-| `inList` | what the member list shows after "Listening to": `source` where it plays (default), `artist`, `title`, or `app` for the application name |
-| `showPaused` | `true` keeps the status on pause, marked as paused |
-| `covers` | `false` turns cover art off |
-| `buttons` | `false` removes the "Listen on …" button |
-| `checkUpdates` | `false` stops the automatic update check |
-| `image` | a picture URL to show when the player gives no cover |
-| `hide` | apps never to show: `["chrome", "Telegram"]` |
-| `names` | your own source names: `{"chrome": "YouTube"}` |
+| `clientId` | приложение Discord, чьё имя стоит после «Слушает». У Яндекс Музыки, Spotify, SoundCloud, YouTube, YouTube Music, Twitch, VK Музыки, Apple Music и Telegram есть свои, у остальных плееров общее. Чтобы всегда было своё имя, создайте приложение на [discord.com/developers/applications](https://discord.com/developers/applications) (**New Application**) и впишите сюда его **Application ID** |
+| `inList` | что видно в списке участников после «Слушает»: `source` — откуда играет (по умолчанию), `artist` — исполнитель, `title` — трек, `app` — имя приложения Discord |
+| `showPaused` | `true` — не убирать статус на паузе, а писать «пауза» |
+| `covers` | `false` — без обложек |
+| `buttons` | `false` — без кнопки «Слушать на …» |
+| `checkUpdates` | `false` — не проверять обновления самой |
+| `image` | ссылка на картинку, которая показывается, если плеер не отдал обложку |
+| `hide` | приложения, которые не показывать: `["chrome", "Telegram"]` |
+| `names` | свои названия источников: `{"chrome": "YouTube"}` |
 
-## How it works
+## Как это работает
 
-Windows already knows what is playing: it is the track card that pops up when you press the volume keys. discord-nowcast reads those system media sessions once a second and, when something changes, sends the status to Discord over its local IPC pipe, the same one games use.
+Windows сама знает, что играет: это та плашка с треком, которая появляется при нажатии кнопок громкости. discord-nowcast раз в секунду читает её (системные медиасессии) и, когда что-то меняется, отправляет статус в Discord через его локальный канал, тот же, через который статус ставят игры.
 
-- **Source name.** Taken from the app's ID. A site installed as an app (SoundCloud or YouTube Music via *Install* in Chrome or Edge) is named as in the Start menu, so the status says SoundCloud, not Chrome.
-- **Cover art.** The picture the player hands to Windows along with the track. Discord only shows pictures by URL, so it is uploaded to the temporary host [litterbox.catbox.moe](https://litterbox.catbox.moe) for three days. If the player gives no picture, Discord shows the application icon.
-- **The button.** Players do not tell Windows the track's link, so "Listen on …" opens a search for the track in the same service; for Telegram and browsers, a YouTube search. Discord does not let you click your own buttons, only other people's.
-- **Rate limit.** Discord accepts at most five updates per 20 seconds, so the status changes at most once every four seconds.
+- **Название источника** берётся из идентификатора приложения. Если сайт установлен как приложение (SoundCloud или YouTube Music через «Установить» в Chrome или Edge), берётся его имя из меню «Пуск». В обычной вкладке браузера сайт узнаётся по заголовку окна: там, где он содержит название трека, ищется YouTube, Twitch, SoundCloud и другие. Поэтому в статусе будет SoundCloud, а не Chrome.
+- **«Слушает SoundCloud».** Discord пишет после «Слушает» имя приложения, через которое пришёл статус. Поэтому у каждого сервиса своё приложение Discord, и программа переподключается к нужному, когда меняется источник. YouTube и Twitch идут с типом «Смотрит».
+- **Обложка** — картинка, которую плеер отдаёт Windows вместе с треком. Discord показывает картинки только по ссылке из интернета, поэтому она выкладывается на временный хостинг [litterbox.catbox.moe](https://litterbox.catbox.moe) на трое суток. Если плеер картинку не отдал, в статусе иконка приложения Discord.
+- **Кнопка.** Плееры не сообщают Windows ссылку на трек, поэтому «Слушать на …» открывает поиск трека в том же сервисе; для Telegram и браузеров — поиск на YouTube. Свою кнопку Discord нажать не даёт, работает она только у других.
+- **Частота.** Discord принимает не больше пяти обновлений за 20 секунд, поэтому статус меняется не чаще раза в четыре секунды.
 
-## Limitations
+## Ограничения
 
-- The app has to tell Windows what it plays. Almost every app does; if it is missing under *What Windows sees*, discord-nowcast cannot see it either.
-- A regular browser tab shows up as the browser, not the site: Chrome, not SoundCloud. Install the site as an app, or name it yourself in `names`.
-- The progress bar needs the app to report the track length. Yandex Music, Spotify and most sites do; Telegram does not, so it shows elapsed time.
+- Приложение должно сообщать Windows о треке. Почти все так делают; если его нет в «Что видит Windows», программа его тоже не увидит.
+- Сайт во вкладке браузера узнаётся по заголовку окна, а Windows показывает только заголовок вкладки, которая открыта в окне. Если трек начался в фоновой вкладке, в статусе будет браузер, например Chrome. Тогда переключитесь на вкладку с музыкой, установите сайт как приложение или задайте своё название в `names`.
+- Полоска времени есть, только если приложение сообщает длину трека. Яндекс Музыка, Spotify и большинство сайтов сообщают; Telegram нет, у него показывается прошедшее время.
 
-## Privacy
+## Приватность
 
-The artist and title go only to Discord: that is the status itself. The cover picture from the player is uploaded to litterbox.catbox.moe; `"covers": false` turns that off. The update check asks GitHub for the latest release. Nothing else is sent anywhere.
+Исполнитель и название трека уходят только в Discord: это и есть статус. Картинка обложки из плеера выкладывается на litterbox.catbox.moe; `"covers": false` это отключает. Проверка обновлений спрашивает у GitHub последний релиз. Больше ничего никуда не отправляется.
 
-## Building it yourself
+## Собрать самому
 
 ```
 powershell -ExecutionPolicy Bypass -File build.ps1
 ```
 
-It uses the C# compiler that ships with .NET Framework 4.8 on every Windows 10 and 11, so there is nothing to install. The code is in `src`.
+Используется компилятор C#, который входит в .NET Framework 4.8 на любой Windows 10 и 11, так что ставить ничего не нужно. Код — в папке `src`.
 
-## Questions, bugs, ideas
+## Вопросы, баги, идеи
 
-- [Discussions](https://github.com/playsin333/discord-nowcast/discussions): questions, ideas, show your setup.
-- [Report a bug](https://github.com/playsin333/discord-nowcast/issues/new?template=bug.yml): a screenshot of *What Windows sees* and the log help the most.
+- [Обсуждения](https://github.com/playsin333/discord-nowcast/discussions): вопросы, идеи, скриншоты своего статуса.
+- [Сообщить о баге](https://github.com/playsin333/discord-nowcast/issues/new?template=bug.yml): больше всего помогают скриншот «Что видит Windows» и лог.
 
-Changes are listed in [CHANGELOG.md](CHANGELOG.md).
+Изменения — в [CHANGELOG.md](CHANGELOG.md).
 
-License: [MIT](LICENSE).
+Лицензия: [MIT](LICENSE).
