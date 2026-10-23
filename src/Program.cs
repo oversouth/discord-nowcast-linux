@@ -16,7 +16,7 @@ namespace Nowcast
     static class Program
     {
         // Raise with every release, together with a CHANGELOG.md entry.
-        public const string Version = "1.3.1";
+        public const string Version = "1.3.2";
         public const string Repo = "playsin333/discord-nowcast";
 
         [STAThread]
