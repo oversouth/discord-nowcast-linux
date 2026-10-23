@@ -81,15 +81,23 @@ namespace Nowcast
 
         void Loop()
         {
-            try
+            // Tried again every 30 s: Windows may let the program in later.
+            string lastError = null;
+            while (!stopping)
             {
-                Media.Open();
-            }
-            catch (Exception e)
-            {
-                Log.Write("Media sessions unavailable: " + e.Message);
-                Report("Windows media sessions unavailable");
-                return;
+                try
+                {
+                    Media.Open();
+                    break;
+                }
+                catch (Exception e)
+                {
+                    var error = Describe(e);
+                    if (error != lastError) Log.Write("Media sessions unavailable: " + error);
+                    lastError = error;
+                    Report(Text.MediaUnavailable);
+                    wake.WaitOne(30000);
+                }
             }
             while (!stopping)
             {
@@ -254,6 +262,17 @@ namespace Nowcast
         {
             var line = track.Artist != "" ? track.Artist + " — " + track.Title : track.Title;
             return line + " · " + track.Source.Name;
+        }
+
+        // The error underneath the task and reflection wrappers, with its code:
+        // "One or more errors occurred" alone says nothing.
+        static string Describe(Exception e)
+        {
+            while ((e is AggregateException || e is System.Reflection.TargetInvocationException) && e.InnerException != null)
+            {
+                e = e.InnerException;
+            }
+            return e.GetType().Name + " 0x" + e.HResult.ToString("X8") + ": " + e.Message;
         }
 
         void Report(string status)
