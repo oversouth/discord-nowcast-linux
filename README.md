@@ -11,11 +11,12 @@
 [![release](https://img.shields.io/github/v/release/playsin333/discord-nowcast?color=5865f2)](https://github.com/playsin333/discord-nowcast/releases/latest)
 [![downloads](https://img.shields.io/github/downloads/playsin333/discord-nowcast/total?color=3d3c38)](https://github.com/playsin333/discord-nowcast/releases)
 ![platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-3d3c38)
+[![discord](https://img.shields.io/badge/discord-%D1%81%D0%B5%D1%80%D0%B2%D0%B5%D1%80-5865f2)](https://discord.gg/pHzmvghmJR)
 [![license](https://img.shields.io/badge/license-MIT-3d3c38)](LICENSE)
 
 **Русский** · [English](README.en.md)
 
-**[⬇ Скачать discord-nowcast.exe](https://github.com/playsin333/discord-nowcast/releases/latest/download/discord-nowcast.exe)** · [Обсуждения](https://github.com/playsin333/discord-nowcast/discussions) · [Сообщить о баге](https://github.com/playsin333/discord-nowcast/issues/new?template=bug.yml)
+**[⬇ Скачать discord-nowcast.exe](https://github.com/playsin333/discord-nowcast/releases/latest/download/discord-nowcast.exe)** · [Сервер в Discord](https://discord.gg/pHzmvghmJR) · [Обсуждения](https://github.com/playsin333/discord-nowcast/discussions) · [Сообщить о баге](https://github.com/playsin333/discord-nowcast/issues/new?template=bug.yml)
 
 </div>
 
@@ -75,6 +76,7 @@
 | `inList` | что видно в списке участников после «Слушает»: `source` — откуда играет (по умолчанию), `artist` — исполнитель, `title` — трек, `app` — имя приложения Discord |
 | `showPaused` | `true` — не убирать статус на паузе, а писать «пауза» |
 | `covers` | `false` — без обложек |
+| `coverSearch` | `false` — не искать обложку альбома в iTunes, всегда брать картинку из плеера |
 | `buttons` | `false` — без кнопки «Слушать на …» |
 | `checkUpdates` | `false` — не проверять обновления самой |
 | `image` | ссылка на картинку, которая показывается, если плеер не отдал обложку |
@@ -87,7 +89,7 @@ Windows сама знает, что играет: это та плашка с т
 
 - **Название источника** берётся из идентификатора приложения. Если сайт установлен как приложение (SoundCloud или YouTube Music через «Установить» в Chrome или Edge), берётся его имя из меню «Пуск». В обычной вкладке браузера сайт узнаётся по заголовку окна: там, где он содержит название трека, ищется YouTube, Twitch, SoundCloud и другие. Поэтому в статусе будет SoundCloud, а не Chrome.
 - **«Слушает SoundCloud».** Discord пишет после «Слушает» имя приложения, через которое пришёл статус. Поэтому у каждого сервиса своё приложение Discord, и программа переподключается к нужному, когда меняется источник. YouTube и Twitch идут с типом «Смотрит».
-- **Обложка** — картинка, которую плеер отдаёт Windows вместе с треком. Discord показывает картинки только по ссылке из интернета, поэтому она выкладывается на временный хостинг [litterbox.catbox.moe](https://litterbox.catbox.moe) на трое суток, а если он не работает, на [uguu.se](https://uguu.se) на три часа. Если плеер картинку не отдал, в статусе иконка приложения Discord.
+- **Обложка.** Сначала программа ищет трек в открытом каталоге iTunes. Если там есть тот же исполнитель с тем же названием, берётся обложка альбома: она в хорошем качестве и не требует загрузки. Иначе используется картинка, которую плеер отдаёт Windows вместе с треком. Discord показывает картинки только по ссылке из интернета, поэтому она выкладывается на временный хостинг [litterbox.catbox.moe](https://litterbox.catbox.moe) на трое суток, а если он не работает, на [uguu.se](https://uguu.se) на три часа. Если плеер картинку не отдал, в статусе иконка приложения Discord.
 - **Кнопка.** Плееры не сообщают Windows ссылку на трек, поэтому «Слушать на …» открывает поиск трека в том же сервисе; для Telegram и браузеров — поиск на YouTube. Свою кнопку Discord нажать не даёт, работает она только у других.
 - **Частота.** Discord принимает не больше пяти обновлений за 20 секунд, поэтому статус меняется не чаще раза в четыре секунды.
 
@@ -99,7 +101,7 @@ Windows сама знает, что играет: это та плашка с т
 
 ## Приватность
 
-Исполнитель и название трека уходят только в Discord: это и есть статус. Картинка обложки из плеера выкладывается на litterbox.catbox.moe (или uguu.se); `"covers": false` это отключает. Проверка обновлений спрашивает у GitHub последний релиз. Больше ничего никуда не отправляется.
+Исполнитель и название трека уходят в Discord (это и есть статус) и в поиск iTunes за обложкой; `"coverSearch": false` отключает поиск. Картинка обложки из плеера выкладывается на litterbox.catbox.moe (или uguu.se); `"covers": false` это отключает. Проверка обновлений спрашивает у GitHub последний релиз. Больше ничего никуда не отправляется.
 
 ## Собрать самому
 
@@ -111,6 +113,7 @@ powershell -ExecutionPolicy Bypass -File build.ps1
 
 ## Вопросы, баги, идеи
 
+- [Сервер в Discord](https://discord.gg/pHzmvghmJR): помощь, новости, скрины статусов. Быстрее всего ответят там.
 - [Обсуждения](https://github.com/playsin333/discord-nowcast/discussions): вопросы, идеи, скриншоты своего статуса.
 - [Сообщить о баге](https://github.com/playsin333/discord-nowcast/issues/new?template=bug.yml): больше всего помогают скриншот «Что видит Windows» и лог.
 

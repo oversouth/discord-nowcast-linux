@@ -8,10 +8,11 @@ using System.Web.Script.Serialization;
 
 namespace Nowcast
 {
-    // The cover is always the picture the player handed to Windows, exactly
-    // what the player shows. Discord only shows pictures by URL, so it goes to
-    // litterbox.catbox.moe, a temporary image host that keeps it three days,
-    // or uguu.se when litterbox is down.
+    // The cover: the album art from the iTunes search when the same artist and
+    // title are found there, a link Discord shows as is. Otherwise the picture
+    // the player handed to Windows; Discord only shows pictures by URL, so it
+    // goes to litterbox.catbox.moe, a temporary image host that keeps it three
+    // days, or uguu.se when litterbox is down.
     static class Covers
     {
         static readonly HttpClient http = Client();
@@ -28,9 +29,12 @@ namespace Nowcast
         // Tracks without a cover yet: when to look again and how many looks are left.
         static readonly Dictionary<string, DateTime> retryAt = new Dictionary<string, DateTime>();
         static readonly Dictionary<string, int> triesLeft = new Dictionary<string, int>();
+        // Tracks already looked up in iTunes: one search per track.
+        static readonly HashSet<string> searched = new HashSet<string>();
 
         // The URL of the track's cover, or null when there is none yet.
-        public static string Find(Track track)
+        // search: look in iTunes first.
+        public static string Find(Track track, bool search)
         {
             string url;
             if (cache.TryGetValue(track.Key, out url)) return url;
@@ -40,6 +44,16 @@ namespace Nowcast
                 cache.Clear();
                 retryAt.Clear();
                 triesLeft.Clear();
+                searched.Clear();
+            }
+            if (search && searched.Add(track.Key))
+            {
+                url = Search(track);
+                if (url != null)
+                {
+                    cache[track.Key] = url;
+                    return url;
+                }
             }
             try
             {
@@ -61,6 +75,57 @@ namespace Nowcast
             }
             cache[track.Key] = url;
             return url;
+        }
+
+        // The album art for the same artist and title in the iTunes search, or
+        // null. A video's own frame says more than an album, so videos are left
+        // to the player's picture. A search finds songs with the same title by
+        // other artists, so both have to match.
+        static string Search(Track track)
+        {
+            if (track.Source.IsVideo || track.Artist == "" || track.Title == "") return null;
+            var artist = Norm(Regex.Split(track.Artist, @",|&|\bfeat\.?|\bft\.?|\bx\b", RegexOptions.IgnoreCase)[0]);
+            var title = Norm(track.Title);
+            if (artist.Length < 2 || title.Length < 2) return null;
+            var term = Uri.EscapeDataString(track.Artist + " " + Regex.Replace(track.Title, @"\s*[(\[].*?[)\]]", ""));
+            foreach (var country in Text.Ru ? new[] { "RU", "US" } : new[] { "US" })
+            {
+                try
+                {
+                    var text = http.GetStringAsync("https://itunes.apple.com/search?entity=song&limit=10&country=" + country + "&term=" + term).Result;
+                    var reply = new JavaScriptSerializer().Deserialize<Dictionary<string, object>>(text);
+                    foreach (Dictionary<string, object> result in (ArrayList)reply["results"])
+                    {
+                        var foundArtist = Norm(result["artistName"] as string ?? "");
+                        var foundTitle = Norm(result["trackName"] as string ?? "");
+                        var art = result.ContainsKey("artworkUrl100") ? result["artworkUrl100"] as string : null;
+                        if (art == null || !Alike(foundArtist, artist) || !Alike(foundTitle, title)) continue;
+                        return art.Replace("100x100bb", "600x600bb");
+                    }
+                }
+                catch (Exception e)
+                {
+                    Log.Write("iTunes search failed: " + Message(e));
+                    return null;
+                }
+            }
+            return null;
+        }
+
+        // Lowercase letters and digits only, without (feat. …), [Remix] and the like.
+        static string Norm(string text)
+        {
+            text = Regex.Replace(text, @"[(\[].*?[)\]]", "");
+            text = Regex.Replace(text, @"\s(feat|ft)\.?\s.*$", "", RegexOptions.IgnoreCase);
+            return Regex.Replace(text.ToLowerInvariant(), @"[^\p{L}\p{N}]", "");
+        }
+
+        // The same, or one starts the other: "Song" and "Song - Remastered 2011".
+        static bool Alike(string found, string wanted)
+        {
+            if (found == wanted) return true;
+            var shorter = Math.Min(found.Length, wanted.Length);
+            return shorter >= 4 && (found.StartsWith(wanted) || wanted.StartsWith(found));
         }
 
         // Whether a track that had no cover may be looked at again.

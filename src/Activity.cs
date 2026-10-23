@@ -34,7 +34,7 @@ namespace Nowcast
             if (!track.IsPlaying) activity["state"] = Limit(state + " · " + Text.Paused);
 
             var assets = new Dictionary<string, object>();
-            var cover = settings.Covers ? Covers.Find(track) : null;
+            var cover = settings.Covers ? Covers.Find(track, settings.CoverSearch) : null;
             var image = cover ?? (settings.Image != "" ? settings.Image : null);
             if (image != null)
             {

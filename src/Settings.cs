@@ -21,6 +21,8 @@ namespace Nowcast
         public string InList = "source";
         public bool ShowPaused = false;
         public bool Covers = true;
+        // Album art from the iTunes search when the track is found there.
+        public bool CoverSearch = true;
         public bool Buttons = true;
         public bool CheckUpdates = true;
         public string Image = "";
@@ -59,6 +61,7 @@ namespace Nowcast
                 "  \"inList\": " + json.Serialize(InList),
                 "  \"showPaused\": " + json.Serialize(ShowPaused),
                 "  \"covers\": " + json.Serialize(Covers),
+                "  \"coverSearch\": " + json.Serialize(CoverSearch),
                 "  \"buttons\": " + json.Serialize(Buttons),
                 "  \"checkUpdates\": " + json.Serialize(CheckUpdates),
                 "  \"image\": " + json.Serialize(Image),
@@ -110,6 +113,7 @@ namespace Nowcast
             InList = Get<string>(values, "inList") ?? InList;
             ShowPaused = Get(values, "showPaused", ShowPaused);
             Covers = Get(values, "covers", Covers);
+            CoverSearch = Get(values, "coverSearch", CoverSearch);
             Buttons = Get(values, "buttons", Buttons);
             CheckUpdates = Get(values, "checkUpdates", CheckUpdates);
             Image = Get<string>(values, "image") ?? Image;
