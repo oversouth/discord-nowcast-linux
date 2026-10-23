@@ -1,4 +1,4 @@
-"""Yandex Music account connector via Ynison & Web API."""
+"""Yandex Music account connector via Web API."""
 import json
 import time
 import urllib.request
@@ -18,86 +18,47 @@ class YandexClient:
     def is_configured(self) -> bool:
         return bool(self.token)
 
+    def fetch_user_id(self) -> Optional[str]:
+        if self.user_id:
+            return self.user_id
+        url = "https://login.yandex.ru/info"
+        data = self._make_request(url)
+        if data and "id" in data:
+            self.user_id = str(data["id"])
+            return self.user_id
+        return None
+
     def fetch_current_track(self) -> Optional[Track]:
         if not self.is_configured():
             return None
 
-        # 1. Try Ynison state API
-        track = self._fetch_ynison_track()
-        if track:
-            return track
+        uid = self.fetch_user_id()
 
-        # 2. Try Queues / History API
-        track = self._fetch_queue_track()
-        if track:
-            return track
-
-        return None
-
-    def _make_request(self, url: str) -> Optional[Dict[str, Any]]:
-        headers = {
-            "Authorization": f"OAuth {self.token}",
-            "User-Agent": "YandexMusic/Linux nowcast",
-            "Accept": "application/json",
-        }
-        req = urllib.request.Request(url, headers=headers)
-        try:
-            with urllib.request.urlopen(req, timeout=4) as resp:
-                if resp.status == 200:
-                    return json.loads(resp.read().decode("utf-8"))
-        except Exception as e:
-            now = time.time()
-            if now - self._last_error_time > 60:
-                Logger.write(f"Yandex Music API request failed ({url}): {e}")
-                self._last_error_time = now
-        return None
-
-    def _fetch_ynison_track(self) -> Optional[Track]:
-        url = "https://api.music.yandex.net/queues"
-        data = self._make_request(url)
-        if not data or "result" not in data:
-            return None
-        res = data["result"]
-        queues = res.get("queues", [])
-        if not queues:
-            return None
-
-        current_queue = queues[0]
-        cur_index = current_queue.get("currentIndex", 0)
-        tracks = current_queue.get("tracks", [])
-        if not tracks or cur_index >= len(tracks):
-            return None
-
-        track_obj = tracks[cur_index]
-        return self._build_track_from_dict(track_obj, is_playing=True)
-
-    def _fetch_queue_track(self) -> Optional[Track]:
-        # Fallback to user history or status
-        url = "https://api.music.yandex.net/account/status"
-        data = self._make_request(url)
-        if not data or "result" not in data:
-            return None
-        res = data["result"]
-        account = res.get("account", {})
-        uid = str(account.get("uid", ""))
-        if uid and not self.user_id:
-            self.user_id = uid
-
-        # Try user plays history
-        if self.user_id:
-            hist_url = f"https://api.music.yandex.net/users/{self.user_id}/history"
-            hist_data = self._make_request(hist_url)
-            if hist_data and "result" in hist_data:
-                tracks = (hist_data["result"] or {}).get("tracks", [])
+        # 1. Try user likes / recent tracks
+        if uid:
+            url = f"https://api.music.yandex.net/users/{uid}/likes/tracks"
+            data = self._make_request(url)
+            if data and "result" in data:
+                lib = data["result"].get("library", {})
+                tracks = lib.get("tracks", [])
                 if tracks:
                     first = tracks[0]
-                    # Check if played recently (< 15 mins)
-                    timestamp_str = first.get("timestamp")
-                    return self._build_track_from_dict(first.get("track", first), is_playing=True)
+                    track_id = str(first.get("id"))
+                    ts_str = first.get("timestamp")
+                    # Fetch full track metadata
+                    full_track = self.fetch_track_info(track_id)
+                    if full_track:
+                        return full_track
 
         return None
 
-    def _build_track_from_dict(self, t: Dict[str, Any], is_playing: bool = True) -> Optional[Track]:
+    def fetch_track_info(self, track_id: str) -> Optional[Track]:
+        url = f"https://api.music.yandex.net/tracks/{track_id}"
+        data = self._make_request(url)
+        if not data or "result" not in data or not data["result"]:
+            return None
+
+        t = data["result"][0]
         title = t.get("title", "")
         artists_list = t.get("artists", [])
         artists = ", ".join(a.get("name", "") for a in artists_list if a.get("name"))
@@ -128,10 +89,28 @@ class YandexClient:
             artist=artists,
             title=title,
             album=album_name,
-            is_playing=is_playing,
+            is_playing=True,
             is_current=True,
             position=0.0,
             duration=duration_sec,
             updated_at=int(time.time() * 1000),
             thumbnail=cover_url
         )
+
+    def _make_request(self, url: str) -> Optional[Dict[str, Any]]:
+        headers = {
+            "Authorization": f"OAuth {self.token}",
+            "User-Agent": "YandexMusic/Linux nowcast",
+            "Accept": "application/json",
+        }
+        req = urllib.request.Request(url, headers=headers)
+        try:
+            with urllib.request.urlopen(req, timeout=4) as resp:
+                if resp.status == 200:
+                    return json.loads(resp.read().decode("utf-8"))
+        except Exception as e:
+            now = time.time()
+            if now - self._last_error_time > 60:
+                Logger.write(f"Yandex Music API request failed ({url}): {e}")
+                self._last_error_time = now
+        return None

@@ -21,12 +21,22 @@ def print_status(engine: Engine):
 
 def setup_yandex(settings: Settings):
     print("=== Connect Yandex Music Account ===")
-    print("To connect your Yandex Music account, enter your OAuth token.")
-    print("How to get it:")
-    print("1. Visit https://oauth.yandex.ru/authorize?response_type=token&client_id=23cabbbdc6cd418abb4b46c32ba3e112")
-    print("   or extract it from cookies / Yandex Music web headers.")
+    print("To obtain your token easily, use the official Yandex Music app link:")
+    print()
+    print("1. Open Chrome/Firefox DevTools (F12) -> Network tab.")
+    print("2. Set Throttling to 'Slow 3G' (so the page doesn't redirect too fast).")
+    print("3. Open this link in your browser:")
+    print("   https://oauth.yandex.ru/authorize?response_type=token&client_id=23cabbbdc6cd418abb4b39c32c41195d")
+    print()
+    print("4. Click 'Allow' / 'Разрешить'. Look at the URL bar or Network tab:")
+    print("   Copy the string after access_token= (e.g. y0_AgAAAA...)")
+    print("   (Or generate via: https://ya-token.site/)")
+    print()
     token = input("Enter Yandex OAuth Token: ").strip()
     if token:
+        # Strip url or prefix if user pasted the entire url
+        if "access_token=" in token:
+            token = token.split("access_token=")[1].split("&")[0]
         settings.yandex_token = token
         client = YandexClient(token)
         print("Testing token...")
@@ -34,7 +44,7 @@ def setup_yandex(settings: Settings):
         if track:
             print(f"Successfully connected! Current/Last track: {track.artist} - {track.title}")
         else:
-            print("Token saved. (No current playing queue found right now).")
+            print("Token saved! (Ready to stream tracks when you play music).")
         settings.save()
         print(f"Configuration saved to {CONFIG_PATH}")
     else:
